@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+enum AirDataRate {
+    AirRate_300_BPS = 0;
+    AirRate_1200_BPS = 1;
+    AirRate_2400_BPS = 2;
+    AirRate_4800_BPS = 3;
+    AirRate_9600_BPS = 4;
+    AirRate_19200_BPS = 5;
+    AirRate_38400_BPS = 6;
+    AirRate_62500_BPS = 7;
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+enum UARTBaudRate {
+    UART_1200_BPS = 0;
+    UART_2400_BPS = 1;
+    UART_4800_BPS = 2;
+    UART_9600_BPS = 3;
+    UART_19200_BPS = 4;
+    UART_38400_BPS = 5;
+    UART_57600_BPS = 6;
+    UART_115200_BPS = 7;
+}

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+enum SubpacketLenght {
+    Bytes_Lenght_240 = 0;
+    Bytes_Lenght_128 = 1;
+    Bytes_Lenght_64 = 2;
+    Bytes_Lenght_32 = 3;
+}

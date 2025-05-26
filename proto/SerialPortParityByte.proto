@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+enum SerialPortParityByte {
+    Byte_8N1 = 0;
+    Byte_8O1 = 1;
+    Byte_8E1 = 2;
+}

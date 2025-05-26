@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "AirDataRate.proto";
+import "SubpacketLenght.proto";
+import "SerialPortParityByte.proto";
+import "WORCycle.proto";
+import "UARTBaudRate.proto";
+
+message Configuration {
+    uint32 addressHighByte = 1;
+    uint32 addressLowByte = 2;
+    uint32 NETID = 3;
+
+    bool enableRSSI = 4;
+    bool enableFixedTransmitionMode = 5;
+    bool enableRepeaterMode = 6;
+    bool enableLBT = 7;
+    bool enableWORMode = 8;
+
+    AirDataRate airDataRate = 9;
+    SubpacketLenght subpacketLenght = 10;
+    SerialPortParityByte serialPortParityByte = 11;
+    WORCycle worCycle = 12;
+    UARTBaudRate uartBaudRate = 13;
+}
