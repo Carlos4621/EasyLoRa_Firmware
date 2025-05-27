@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-import "Configuration.proto";
+import "ModuleConfiguration.proto";
 
 message SerialMessage {
     oneof PosibleData {
         string dataToSend = 1;
-        Configuration configuration = 2;
+        ModuleConfiguration configuration = 2;
     }
 }

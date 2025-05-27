@@ -6,7 +6,7 @@ import "SerialPortParityByte.proto";
 import "WORCycle.proto";
 import "UARTBaudRate.proto";
 
-message Configuration {
+message ModuleConfiguration {
     uint32 addressHighByte = 1;
     uint32 addressLowByte = 2;
     uint32 NETID = 3;
