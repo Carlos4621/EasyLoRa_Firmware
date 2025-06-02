@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "stdexcept": "cpp",
+        "span": "cpp",
+        "cstddef": "cpp",
+        "string_view": "cpp",
+        "iostream": "cpp",
+        "streambuf": "cpp"
+    }
+}
