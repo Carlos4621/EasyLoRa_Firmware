@@ -20,7 +20,7 @@ void EasyLoRa_Firmware::begin() {
 void EasyLoRa_Firmware::start() {
     while (true) {
         if (serialUSB_m.available()) {
-            manageIncomingSerialUSBMessage();
+            manageIncomingUSBMessage();
         }
 
         if (serialToLoRa_m.available()) {
@@ -34,23 +34,19 @@ void EasyLoRa_Firmware::start() {
 }
 
 void EasyLoRa_Firmware::manageIncomingLoRaMessage() {
-    receivePrefixedSerialMessage(serialToLoRa_m, receivedLoRaMessage_m);
-    
-    if (messageReceived_m) {
-        if (isACKMessage(receivedLoRaMessage_m)) {
-            ACKReceived_m = true;
-        }
-        else {
-            serialToLoRa_m.write(ACKMessage.data(), ACKMessage.size());
-        }
-        
-        messageReceived_m = false;
+    receivePrefixedMessage(serialToLoRa_m, receivedLoRaMessage_m);
+
+    if (isACKMessage(receivedLoRaMessage_m)) {
+        ACKReceived_m = true;
+    }
+    else {
+        trySendFixedSizeMessage(serialToLoRa_m, ACKMessage.data(), ACKMessage.size());
     }
 }
 
 void EasyLoRa_Firmware::checkForMessageAcknowledgement() {
     if (!ACKReceived_m) {
-        receivePrefixedSerialMessage(serialToLoRa_m, receivedLoRaMessage_m);
+        receivePrefixedMessage(serialToLoRa_m, receivedLoRaMessage_m);
         
         if (isACKMessage(receivedLoRaMessage_m)) {
             ACKReceived_m = true;
@@ -70,12 +66,33 @@ void EasyLoRa_Firmware::handleUnacknowledgedPacket() {
     // Por ejemplo: reintentar envío, notificar error, almacenar para reenvío, etc.
 }
 
-void EasyLoRa_Firmware::receivePrefixedSerialMessage(HardwareSerial &serial, std::vector<uint8_t> &buffer) {
-    uint8_t messageLength;
-    serial.readBytes(&messageLength, 1);
-    buffer.resize(messageLength);
+void EasyLoRa_Firmware::tryGetFixedSizeMessage(HardwareSerial &serial, uint8_t* buffer, size_t expectedSize) {
+    uint8_t receivedMessageSize{ serial.readBytes(buffer, expectedSize) };
 
-    serial.readBytes(buffer.data(), messageLength);
+    if (receivedMessageSize != expectedSize) {
+        throw MessageSizeMissmatch{ expectedSize, receivedMessageSize, true };
+    }
+}
+
+void EasyLoRa_Firmware::trySendFixedSizeMessage(HardwareSerial &serial, const uint8_t const *message, size_t messageSize) {
+    if (serial.write(message, messageSize) == 0) {
+        throw MessageSizeMissmatch{ messageSize, 0, false };
+    }
+}
+
+void EasyLoRa_Firmware::sendMessageToLoRa() {
+    const auto messageSize{ static_cast<uint8_t>(receivedSerialMessage_m.size()) }; // TODO: Limitamos el paquete a 255 bytes, debo corregir
+
+    trySendFixedSizeMessage(serialToLoRa_m, &messageSize, 1);
+    trySendFixedSizeMessage(serialToLoRa_m, receivedSerialMessage_m.data(), receivedSerialMessage_m.size());
+}
+
+void EasyLoRa_Firmware::receivePrefixedMessage(HardwareSerial &serial, std::vector<uint8_t> &buffer) {
+    uint8_t messageSize;
+    tryGetFixedSizeMessage(serial, &messageSize, MessageLenghtSizeInbytes);
+
+    buffer.resize(messageSize);
+    tryGetFixedSizeMessage(serial, buffer.data(), messageSize);
 }
 
 void EasyLoRa_Firmware::applyIfConfigurationMessage(const SerialMessage &decodesMessage) {
@@ -88,16 +105,12 @@ void EasyLoRa_Firmware::applyNewConfiguration(const ModuleConfiguration &newConf
     // TODO
 }
 
-void EasyLoRa_Firmware::manageIncomingSerialUSBMessage() {
-    receivePrefixedSerialMessage(serialUSB_m, receivedSerialMessage_m);
+void EasyLoRa_Firmware::manageIncomingUSBMessage() {
+    receivePrefixedMessage(serialUSB_m, receivedSerialMessage_m);
     const auto decodedMessage{ SerialMessageDecoder::decode(receivedSerialMessage_m) };
-
     applyIfConfigurationMessage(decodedMessage);
 
-    // TODO: Esto limita el mensaje a 255 de longitud, tal vez debería hacer otra codificación que use dos bytes?
-    serialToLoRa_m.write(static_cast<uint8_t>(receivedSerialMessage_m.size()));
-    serialToLoRa_m.write(receivedSerialMessage_m.data(), receivedSerialMessage_m.size());
-    
+    sendMessageToLoRa();
     messageSent_m = true;
 }
 
