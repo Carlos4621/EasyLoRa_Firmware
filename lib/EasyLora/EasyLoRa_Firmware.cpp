@@ -67,14 +67,14 @@ void EasyLoRa_Firmware::handleUnacknowledgedPacket() {
 }
 
 void EasyLoRa_Firmware::tryGetFixedSizeMessage(HardwareSerial &serial, uint8_t* buffer, size_t expectedSize) {
-    uint8_t receivedMessageSize{ serial.readBytes(buffer, expectedSize) };
+    const auto receivedMessageSize{ serial.readBytes(buffer, expectedSize) };
 
     if (receivedMessageSize != expectedSize) {
         throw MessageSizeMissmatch{ expectedSize, receivedMessageSize, true };
     }
 }
 
-void EasyLoRa_Firmware::trySendFixedSizeMessage(HardwareSerial &serial, const uint8_t const *message, size_t messageSize) {
+void EasyLoRa_Firmware::trySendFixedSizeMessage(HardwareSerial &serial, const uint8_t* message, size_t messageSize) {
     if (serial.write(message, messageSize) == 0) {
         throw MessageSizeMissmatch{ messageSize, 0, false };
     }

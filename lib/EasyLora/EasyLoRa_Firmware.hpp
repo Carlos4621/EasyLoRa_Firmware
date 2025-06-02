@@ -55,7 +55,7 @@ private:
     void sendMessageToLoRa();
 
     static void tryGetFixedSizeMessage(HardwareSerial& serial, uint8_t* buffer, size_t expectedSize);
-    static void trySendFixedSizeMessage(HardwareSerial& serial, const uint8_t* const message, size_t messageSize);
+    static void trySendFixedSizeMessage(HardwareSerial& serial, const uint8_t* message, size_t messageSize);
 
     static void receivePrefixedMessage(HardwareSerial& serial, std::vector<uint8_t>& buffer);
 
