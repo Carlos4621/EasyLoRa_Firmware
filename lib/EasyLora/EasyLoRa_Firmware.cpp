@@ -24,7 +24,7 @@ void EasyLoRa_Firmware::start() {
         }
 
         if (serialToLoRa_m.available()) {
-            processIncomingLoRaMessage();
+            manageIncomingLoRaMessage();
         }
 
         if (messageSent_m) {
@@ -33,7 +33,7 @@ void EasyLoRa_Firmware::start() {
     }
 }
 
-void EasyLoRa_Firmware::processIncomingLoRaMessage() {
+void EasyLoRa_Firmware::manageIncomingLoRaMessage() {
     receivePrefixedSerialMessage(serialToLoRa_m, receivedLoRaMessage_m);
     
     if (messageReceived_m) {
@@ -80,11 +80,11 @@ void EasyLoRa_Firmware::receivePrefixedSerialMessage(HardwareSerial &serial, std
 
 void EasyLoRa_Firmware::applyIfConfigurationMessage(const SerialMessage &decodesMessage) {
     if (decodesMessage.which_PosibleData == SerialMessage_configuration_tag) {
-        applyChanges(decodesMessage.PosibleData.configuration);
+        applyNewConfiguration(decodesMessage.PosibleData.configuration);
     }    
 }
 
-void EasyLoRa_Firmware::applyChanges(const ModuleConfiguration &newConfiguration) {
+void EasyLoRa_Firmware::applyNewConfiguration(const ModuleConfiguration &newConfiguration) {
     // TODO
 }
 

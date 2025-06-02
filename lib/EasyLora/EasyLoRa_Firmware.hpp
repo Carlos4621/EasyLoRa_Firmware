@@ -14,6 +14,12 @@
 class EasyLoRa_Firmware {
 public:
 
+    /// @brief Constructor base
+    /// @param serialUSB Puerto en donde se enviarán y recibirán paquetes
+    /// @param serialToLoRa Puerto en donde se comunicará el MCU con el chip EByte
+    /// @param m0_Pin Pin a m0 del chip
+    /// @param m1_Pin Pin a m1 del chip
+    /// @param auxPin Pin a aux del chip
     EasyLoRa_Firmware(SerialUSB& serialUSB, SerialUART& serialToLoRa, byte m0_Pin, byte m1_Pin, byte auxPin);
 
     /// @brief Inicializa el dispositivo, debe ser llamado antes de cualquier otra función.
@@ -38,11 +44,11 @@ private:
     SerialUART& serialToLoRa_m;
     EBYTE LoRaConfigurator_m;
 
-    void applyIfConfigurationMessage(const SerialMessage& decodesMessage);
-    void applyChanges(const ModuleConfiguration& newConfiguration);
+    void applyIfConfigurationMessage(const SerialMessage& decodedMessage);
+    void applyNewConfiguration(const ModuleConfiguration& newConfiguration);
     void manageIncomingSerialUSBMessage();
 
-    void processIncomingLoRaMessage();
+    void manageIncomingLoRaMessage();
     void checkForMessageAcknowledgement();
     void handleUnacknowledgedPacket();
 
