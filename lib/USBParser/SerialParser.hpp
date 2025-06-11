@@ -1,5 +1,5 @@
-#ifndef USB_PARSER_HEADER
-#define USB_PARSER_HEADER
+#ifndef SERIAL_PARSER_HEADER
+#define SERIAL_PARSER_HEADER
 
 #include <Arduino.h>
 #include <optional>
@@ -8,13 +8,13 @@
 #include <stdexcept>
 
 /// @brief Clase encargada del formateo de mensajes enviados y recibidos desde un puerto USB
-class USBParser {
+class SerialParser {
 public:
 
     /// @brief Constructor base
     /// @param serialUSB Puerto en donde se enviarán y recibirán paquetes donde el primer byte el tamaño del mensaje. Opcionalmente se puede incluir un prefix
     /// @param baudRate Velocidad de baudios para la comunicación USB, por defecto 115200
-    explicit USBParser(SerialUSB& serialUSB, uint32_t baudRate = 115200);
+    explicit SerialParser(arduino::HardwareSerial& serialUSB, uint32_t baudRate = 115200);
 
     /// @brief Inicializa el dispositivo, debe ser llamado antes de cualquier otra función.
     void begin();
@@ -39,7 +39,7 @@ private:
 
     static constexpr uint8_t MessageLengthByteSize{ 1 };
 
-    SerialUSB& USBSerial_m;
+    arduino::HardwareSerial& USBSerial_m;
     uint32_t baudRate_m;
 
     void tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes);
@@ -78,4 +78,4 @@ public:
     }
 };
 
-#endif // !USB_PARSER_HEADER
+#endif // !SERIAL_PARSER_HEADER

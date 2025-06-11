@@ -1,20 +1,20 @@
-#include "USBParser.hpp"
+#include "SerialParser.hpp"
 
-USBParser::USBParser(SerialUSB &serialUSB, uint32_t baudRate)
+SerialParser::SerialParser(arduino::HardwareSerial& serialUSB, uint32_t baudRate)
     : USBSerial_m{ serialUSB }
     , baudRate_m{ baudRate } {
 }
 
-void USBParser::begin() {
+void SerialParser::begin() {
     USBSerial_m.begin(baudRate_m);
 }
 
-void USBParser::setBaudRate(uint32_t baudRate) {
+void SerialParser::setBaudRate(uint32_t baudRate) {
     baudRate_m = baudRate;
     USBSerial_m.begin(baudRate_m);
 }
 
-std::optional<std::vector<uint8_t>> USBParser::readMessage(uint8_t prefixLength) {
+std::optional<std::vector<uint8_t>> SerialParser::readMessage(uint8_t prefixLength) {
     if (!USBSerial_m.available()) {
         return std::nullopt;
     }
@@ -29,7 +29,7 @@ std::optional<std::vector<uint8_t>> USBParser::readMessage(uint8_t prefixLength)
     return buffer;
 }
 
-void USBParser::writeMessage(std::string_view message, std::string_view prefix) {
+void SerialParser::writeMessage(std::string_view message, std::string_view prefix) {
     if (message.empty()) {
         return;
     }
@@ -46,7 +46,7 @@ void USBParser::writeMessage(std::string_view message, std::string_view prefix) 
     tryWriteBytes(buffer);
 }
 
-void USBParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes) {
+void SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes) {
     const auto bytesRead{ USBSerial_m.readBytes(&*buffer, expectedBytes) };
 
     if (expectedBytes != bytesRead) {
@@ -54,7 +54,7 @@ void USBParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expec
     }
 }
 
-void USBParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {
+void SerialParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {
     const auto bytesWritten{ USBSerial_m.write(buffer.data(), buffer.size()) };
 
     if (bytesWritten != buffer.size()) {
