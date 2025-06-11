@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "ModuleConfiguration.proto";
+
+message Envelope {
+    bool requiresACK = 1;
+    
+    oneof PosibleData {
+        string dataToSend = 2;
+        ModuleConfiguration configuration = 3;
+        bool ACK = 4;
+    }
+}
