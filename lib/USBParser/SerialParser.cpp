@@ -29,7 +29,7 @@ std::optional<std::vector<uint8_t>> SerialParser::readMessage(uint8_t prefixLeng
     return buffer;
 }
 
-void SerialParser::writeMessage(std::string_view message, std::string_view prefix) {
+void SerialParser::writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix = {}) {
     if (message.empty()) {
         return;
     }
@@ -44,6 +44,10 @@ void SerialParser::writeMessage(std::string_view message, std::string_view prefi
     buffer.push_back(message.size());
     buffer.insert(buffer.cend(), message.cbegin(), message.cend());
     tryWriteBytes(buffer);
+}
+
+void SerialParser::writeString(std::string_view message, std::string_view prefix) {
+    writeMessage(std::vector<uint8_t>(message.cbegin(), message.cend()), std::vector<uint8_t>(prefix.cbegin(), prefix.cend()));
 }
 
 void SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes) {

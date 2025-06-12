@@ -33,7 +33,12 @@ public:
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
     /// @example 0xAA 0xBB => 0x02 0xAA 0xBB 
-    void writeMessage(std::string_view message, std::string_view prefix = "");
+    void writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix = {});
+
+    /// @brief Método de conveniencia para strings, sigue la misma lógica que writeMessage
+    /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
+    /// @param prefix Prefix a mandar junto al mensaje
+    void writeString(std::string_view message, std::string_view prefix = "");
 
 private:
 
