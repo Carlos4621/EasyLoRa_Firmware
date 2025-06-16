@@ -1,0 +1,293 @@
+#include "E22_400T37S_Configurator.hpp"
+
+E22_400T37S_Configurator::E22_400T37S_Configurator(arduino::HardwareSerial& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin)
+: serialToLoRa_m{ serialToLoRa }
+, m0_pin_m{ m0_pin }
+, m1_pin_m{ m1_pin }
+, auxPin_m{ auxPin }
+{
+}
+
+/* Debido a que el UART no se usa necesariamente en la clase, no se inicializa, pero no hay problema debido a que este se configura cada 
+   vez que intentas modificar una configuración */
+void E22_400T37S_Configurator::begin() {
+    m0_pin_m.begin();
+    m1_pin_m.begin();
+    auxPin_m.begin();
+}
+
+void E22_400T37S_Configurator::setMode(Modes modeToSet) {
+    if (modeToSet == currentMode_m) {
+        return;
+    }
+
+    waitForAuxRaising();
+
+    switch (modeToSet) {
+    case Modes::Transparent:
+        setTransparentMode();
+        break;
+    
+    case Modes::WOR:
+        setWORMode();
+        break;
+
+    case Modes::Configuration:
+        setConfigurationMode();
+        break;
+
+    case Modes::Sleep:
+        setSleepMode();
+        break;
+    }
+
+    waitForAuxRaising();
+
+    delay(ModeSwitchingDelayInMs);
+
+    currentMode_m = modeToSet;
+}
+
+void E22_400T37S_Configurator::setConfiguration(ModuleConfiguration newConfiguration) {
+    
+}
+
+ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
+    const auto previousMode{ currentMode_m };
+    const auto previousBaudRate{ serialToLoRa_m.getBaudRate() };
+    setMode(Modes::Configuration);
+
+    serialToLoRa_m.setBaudRate(BaudRateForConfiguration);
+
+    serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(ReadAllConfigurationCommand.cbegin(), ReadAllConfigurationCommand.cend()));
+
+    const auto message{ serialToLoRa_m.readMessage() };
+
+    if (!message.has_value()) {
+        throw ResponseDontReceived{};
+    }
+
+    const auto response{ message.value() };
+
+    if (response.size() != ExpectedConfigurationResponseSize) {
+        throw AbnormalResponse{ response };
+    }
+
+    ModuleConfiguration configuration;
+
+    configuration.addressHighByte = response[HighAddress_Byte];
+    configuration.addressLowByte = response[LowAddress_Byte];
+    configuration.NETID = response[NETID_Byte];
+
+    configuration.uartBaudRate = getBaudRateFromREG0(response[REG0_Byte]);
+    configuration.serialPortParityByte = getParityByteFromREG0(response[REG0_Byte]);
+    configuration.airDataRate = getAirDataRateFromREG0(response[REG0_Byte]);
+
+    configuration.subpacketLenght = getSubpacketLenghFromREG1(response[REG1_Byte]);
+    configuration.enableRSSI = getRSSINoiseFromREG1(response[REG1_Byte]);
+    configuration.enableAbnormalLog = getAbnormalLogEnabledFromREG1(response[REG1_Byte]);
+    
+    configuration.Channel = response[Channel_Byte];
+
+    configuration.RSSIByte = getRSSIEnabledFromREG3(response[REG3_Byte]);
+    configuration.enableFixedTransmitionMode = getTransmissionMethodFromREG3(response[REG3_Byte]);
+    configuration.enableRepeaterMode = getRelayFunctionREG3(response[REG3_Byte]);
+    configuration.enableLBT = getLBTEnabledFromREG3(response[REG3_Byte]);
+    configuration.enableWORMode = getWORModeFromREG3(response[REG3_Byte]);
+    configuration.worCycle = getWORCycleFromREG3(response[REG3_Byte]);
+
+    return configuration;
+}
+
+void E22_400T37S_Configurator::setTransparentMode() {
+    m0_pin_m.write(false);
+    m1_pin_m.write(false);
+}
+
+void E22_400T37S_Configurator::setWORMode() {
+    m0_pin_m.write(true);
+    m1_pin_m.write(false);
+}
+
+void E22_400T37S_Configurator::setConfigurationMode() {
+    m0_pin_m.write(false);
+    m1_pin_m.write(true);
+}
+
+void E22_400T37S_Configurator::setSleepMode() {
+    m0_pin_m.write(true);
+    m1_pin_m.write(true);
+}
+
+void E22_400T37S_Configurator::waitForAuxRaising() {
+    while (!auxPin_m.read()) {
+        delay(1); // watchdog
+    }
+}
+
+UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) const {
+    const uint8_t value{ REG0 >> 5 };
+
+    switch (value) {
+    case 0b000:
+        return UARTBaudRate_UART_1200_BPS;
+
+    case 0b001:
+        return UARTBaudRate_UART_2400_BPS;
+
+    case 0b010:
+        return UARTBaudRate_UART_4800_BPS;
+
+    case 0b011:
+        return UARTBaudRate_UART_9600_BPS;
+    
+    case 0b100:
+        return UARTBaudRate_UART_19200_BPS;
+
+    case 0b101:
+        return UARTBaudRate_UART_38400_BPS;
+
+    case 0b110:
+        return UARTBaudRate_UART_57600_BPS;
+
+    case 0b111:
+        return UARTBaudRate_UART_115200_BPS;
+
+    default:
+        throw AbnormalRegister{ "BaudRate", value };
+    }
+}
+
+SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG0) const {
+    const uint8_t value{ (REG0 >> 3) & 0b11 };
+
+    switch (value) {
+    case 0b00:
+    case 0b11:
+        return SerialPortParityByte_Byte_8N1;
+    
+    case 0b01:
+        return SerialPortParityByte_Byte_8O1;
+
+    case 0b10:
+        return SerialPortParityByte_Byte_8E1;
+
+    default:
+        throw AbnormalRegister{ "ParityByte", value };
+    }
+}
+
+AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) const {
+    const uint8_t value{ REG0 & 0b111 };
+
+    switch (value) {
+    case 0b000:
+        return AirDataRate_AirRate_300_BPS;
+
+    case 0b001:
+        return AirDataRate_AirRate_1200_BPS;
+
+    case 0b010:
+        return AirDataRate_AirRate_2400_BPS;
+
+    case 0b011:
+        return AirDataRate_AirRate_4800_BPS;
+
+    case 0b100:
+        return AirDataRate_AirRate_9600_BPS;
+    
+    case 0b101:
+        return AirDataRate_AirRate_19200_BPS;
+
+    case 0b110:
+        return AirDataRate_AirRate_38400_BPS;
+
+    case 0b111:
+        return AirDataRate_AirRate_62500_BPS;
+    
+    default:
+        throw AbnormalRegister{ "AirDataRate", value };
+    }
+}
+
+SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1) const {
+    const uint8_t value{ REG1 >> 6 };
+
+    switch (value) {
+    case 0b00:
+        return SubpacketLenght_Bytes_Lenght_240;
+    
+    case 0b01:
+        return SubpacketLenght_Bytes_Lenght_128;
+
+    case 0b10:
+        return SubpacketLenght_Bytes_Lenght_64;
+
+    case 0b11:
+        return SubpacketLenght_Bytes_Lenght_32;
+    
+    default:
+        throw AbnormalRegister{ "SubpacketLenght", value };
+    }
+}
+
+bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) const noexcept {
+    return (REG1 >> 5) & 1;
+}
+
+bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) const noexcept {
+    return (REG1 >> 2) & 1;
+}
+
+bool E22_400T37S_Configurator::getRSSIEnabledFromREG3(uint8_t REG3) const noexcept {
+    return (REG3 >> 7);
+}
+
+bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) const noexcept {
+    return (REG3 >> 6) & 1;
+}
+
+bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) const noexcept {
+    return (REG3 >> 5) & 1;
+}
+
+bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) const noexcept {
+    return (REG3 >> 4) & 1;
+}
+
+bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) const noexcept {
+    return (REG3 >> 3) & 1;
+}
+
+WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) const {
+    const uint8_t value{ REG3 & 0b111 };
+
+    switch (value) {
+    case 0b000:
+        return WORCycle_WORCycle_500_ms;
+
+    case 0b001:
+        return WORCycle_WORCycle_1000_ms;
+
+    case 0b010:
+        return WORCycle_WORCycle_1500_ms;
+
+    case 0b011:
+        return WORCycle_WORCycle_2000_ms;
+    
+    case 0b100:
+        return WORCycle_WORCycle_2500_ms;
+
+    case 0b101:
+        return WORCycle_WORCycle_3000_ms;
+
+    case 0b110:
+        return WORCycle_WORCycle_3500_ms;
+
+    case 0b111:
+        return WORCycle_WORCycle_4000_ms;
+    
+    default:
+        throw AbnormalRegister{ "WORCycle", value };
+    }
+}
