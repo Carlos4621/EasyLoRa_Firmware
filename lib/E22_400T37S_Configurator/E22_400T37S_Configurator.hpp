@@ -66,41 +66,45 @@ private:
 
     void waitForAuxRaising();
 
-    [[nodiscard]]
-    UARTBaudRate getBaudRateFromREG0(uint8_t REG0) const;
+    static void setComponentsFromREG0(ModuleConfiguration& configuration, uint8_t REG0);
+    static void setComponentsFromREG1(ModuleConfiguration& configuration, uint8_t REG1);
+    static void setComponentsFromREG3(ModuleConfiguration& configuration, uint8_t REG3);
 
     [[nodiscard]]
-    SerialPortParityByte getParityByteFromREG0(uint8_t REG0) const;
+    static UARTBaudRate getBaudRateFromREG0(uint8_t REG0);
 
     [[nodiscard]]
-    AirDataRate getAirDataRateFromREG0(uint8_t REG0) const;
+    static SerialPortParityByte getParityByteFromREG0(uint8_t REG0);
 
     [[nodiscard]]
-    SubpacketLenght getSubpacketLenghFromREG1(uint8_t REG1) const;
+    static AirDataRate getAirDataRateFromREG0(uint8_t REG0);
 
     [[nodiscard]]
-    bool getRSSINoiseFromREG1(uint8_t REG1) const noexcept;
+    static SubpacketLenght getSubpacketLenghFromREG1(uint8_t REG1);
 
     [[nodiscard]]
-    bool getAbnormalLogEnabledFromREG1(uint8_t REG1) const noexcept;
+    static bool getRSSINoiseFromREG1(uint8_t REG1) noexcept;
 
     [[nodiscard]]
-    bool getRSSIEnabledFromREG3(uint8_t REG3) const noexcept;
+    static bool getAbnormalLogEnabledFromREG1(uint8_t REG1) noexcept;
 
     [[nodiscard]]
-    bool getTransmissionMethodFromREG3(uint8_t REG3) const noexcept;
+    static bool getRSSIEnabledFromREG3(uint8_t REG3) noexcept;
 
     [[nodiscard]]
-    bool getRelayFunctionREG3(uint8_t REG3) const noexcept;
+    static bool getTransmissionMethodFromREG3(uint8_t REG3) noexcept;
 
     [[nodiscard]]
-    bool getLBTEnabledFromREG3(uint8_t REG3) const noexcept;
+    static bool getRelayFunctionREG3(uint8_t REG3) noexcept;
 
     [[nodiscard]]
-    bool getWORModeFromREG3(uint8_t REG3) const noexcept;
+    static bool getLBTEnabledFromREG3(uint8_t REG3) noexcept;
 
     [[nodiscard]]
-    WORCycle getWORCycleFromREG3(uint8_t REG3) const;
+    static bool getWORModeFromREG3(uint8_t REG3) noexcept;
+
+    [[nodiscard]]
+    static WORCycle getWORCycleFromREG3(uint8_t REG3);
 };
 
 class ResponseDontReceived : public std::exception {

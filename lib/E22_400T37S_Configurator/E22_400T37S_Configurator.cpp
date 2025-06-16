@@ -79,22 +79,13 @@ ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
     configuration.addressLowByte = response[LowAddress_Byte];
     configuration.NETID = response[NETID_Byte];
 
-    configuration.uartBaudRate = getBaudRateFromREG0(response[REG0_Byte]);
-    configuration.serialPortParityByte = getParityByteFromREG0(response[REG0_Byte]);
-    configuration.airDataRate = getAirDataRateFromREG0(response[REG0_Byte]);
+    setComponentsFromREG0(configuration, response[REG0_Byte]);
 
-    configuration.subpacketLenght = getSubpacketLenghFromREG1(response[REG1_Byte]);
-    configuration.enableRSSI = getRSSINoiseFromREG1(response[REG1_Byte]);
-    configuration.enableAbnormalLog = getAbnormalLogEnabledFromREG1(response[REG1_Byte]);
+    setComponentsFromREG1(configuration, response[REG1_Byte]);
     
     configuration.Channel = response[Channel_Byte];
 
-    configuration.RSSIByte = getRSSIEnabledFromREG3(response[REG3_Byte]);
-    configuration.enableFixedTransmitionMode = getTransmissionMethodFromREG3(response[REG3_Byte]);
-    configuration.enableRepeaterMode = getRelayFunctionREG3(response[REG3_Byte]);
-    configuration.enableLBT = getLBTEnabledFromREG3(response[REG3_Byte]);
-    configuration.enableWORMode = getWORModeFromREG3(response[REG3_Byte]);
-    configuration.worCycle = getWORCycleFromREG3(response[REG3_Byte]);
+    setComponentsFromREG3(configuration, response[REG3_Byte]);
 
     return configuration;
 }
@@ -125,7 +116,28 @@ void E22_400T37S_Configurator::waitForAuxRaising() {
     }
 }
 
-UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) const {
+void E22_400T37S_Configurator::setComponentsFromREG0(ModuleConfiguration &configuration, uint8_t REG0) {
+    configuration.uartBaudRate = getBaudRateFromREG0(REG0);
+    configuration.serialPortParityByte = getParityByteFromREG0(REG0);
+    configuration.airDataRate = getAirDataRateFromREG0(REG0);
+}
+
+void E22_400T37S_Configurator::setComponentsFromREG1(ModuleConfiguration &configuration, uint8_t REG1) {
+    configuration.subpacketLenght = getSubpacketLenghFromREG1(REG1);
+    configuration.enableRSSI = getRSSINoiseFromREG1(REG1);
+    configuration.enableAbnormalLog = getAbnormalLogEnabledFromREG1(REG1);
+}
+
+void E22_400T37S_Configurator::setComponentsFromREG3(ModuleConfiguration &configuration, uint8_t REG3) {
+    configuration.RSSIByte = getRSSIEnabledFromREG3(REG3);
+    configuration.enableFixedTransmitionMode = getTransmissionMethodFromREG3(REG3);
+    configuration.enableRepeaterMode = getRelayFunctionREG3(REG3);
+    configuration.enableLBT = getLBTEnabledFromREG3(REG3);
+    configuration.enableWORMode = getWORModeFromREG3(REG3);
+    configuration.worCycle = getWORCycleFromREG3(REG3);
+}
+
+UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) {
     const uint8_t value{ REG0 >> 5 };
 
     switch (value) {
@@ -158,7 +170,7 @@ UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) const {
     }
 }
 
-SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG0) const {
+SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG0) {
     const uint8_t value{ (REG0 >> 3) & 0b11 };
 
     switch (value) {
@@ -177,7 +189,7 @@ SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG
     }
 }
 
-AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) const {
+AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) {
     const uint8_t value{ REG0 & 0b111 };
 
     switch (value) {
@@ -210,7 +222,7 @@ AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) const
     }
 }
 
-SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1) const {
+SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1) {
     const uint8_t value{ REG1 >> 6 };
 
     switch (value) {
@@ -231,35 +243,35 @@ SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1
     }
 }
 
-bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) const noexcept {
+bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) noexcept {
     return (REG1 >> 5) & 1;
 }
 
-bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) const noexcept {
+bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) noexcept {
     return (REG1 >> 2) & 1;
 }
 
-bool E22_400T37S_Configurator::getRSSIEnabledFromREG3(uint8_t REG3) const noexcept {
+bool E22_400T37S_Configurator::getRSSIEnabledFromREG3(uint8_t REG3) noexcept {
     return (REG3 >> 7);
 }
 
-bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) const noexcept {
+bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) noexcept {
     return (REG3 >> 6) & 1;
 }
 
-bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) const noexcept {
+bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) noexcept {
     return (REG3 >> 5) & 1;
 }
 
-bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) const noexcept {
+bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) noexcept {
     return (REG3 >> 4) & 1;
 }
 
-bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) const noexcept {
+bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) noexcept {
     return (REG3 >> 3) & 1;
 }
 
-WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) const {
+WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) {
     const uint8_t value{ REG3 & 0b111 };
 
     switch (value) {
