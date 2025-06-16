@@ -23,6 +23,11 @@ public:
     /// @param baudRate Velocidad de baudios para la comunicación USB
     void setBaudRate(uint32_t baudRate);
 
+    /// @brief Obtiene el baud rate
+    /// @return El baudRate actual
+    [[nodiscard]]
+    uint32_t getBaudRate() const noexcept;
+
     /// @brief Intenta leer un mensaje del puerto USB
     /// @param prefixLength Longitud del prefix
     /// @return std::optional con std::vector<uint8_t> que contiene el mensaje leído si se pudo leer uno, o std::nullopt si no hay mensajes disponibles.
@@ -39,6 +44,10 @@ public:
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
     void writeString(std::string_view message, std::string_view prefix = "");
+
+    /// @brief Escribe el mensaje tal como está, no se agrega prefix ni tamaño del mensaje
+    /// @param message Mensaje a enviar
+    void writeCrudeMessage(const std::vector<uint8_t>& message);
 
 private:
 

@@ -14,6 +14,10 @@ void SerialParser::setBaudRate(uint32_t baudRate) {
     USBSerial_m.begin(baudRate_m);
 }
 
+uint32_t SerialParser::getBaudRate() const noexcept {
+    return baudRate_m;
+}
+
 std::optional<std::vector<uint8_t>> SerialParser::readMessage(uint8_t prefixLength) {
     if (!USBSerial_m.available()) {
         return std::nullopt;
@@ -29,13 +33,9 @@ std::optional<std::vector<uint8_t>> SerialParser::readMessage(uint8_t prefixLeng
     return buffer;
 }
 
-void SerialParser::writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix = {}) {
+void SerialParser::writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix) {
     if (message.empty()) {
         return;
-    }
-
-    if (!USBSerial_m.availableForWrite()) {
-        throw NoSpaceAvailableForWrite{};
     }
 
     std::vector<uint8_t> buffer;
@@ -50,6 +50,10 @@ void SerialParser::writeString(std::string_view message, std::string_view prefix
     writeMessage(std::vector<uint8_t>(message.cbegin(), message.cend()), std::vector<uint8_t>(prefix.cbegin(), prefix.cend()));
 }
 
+void SerialParser::writeCrudeMessage(const std::vector<uint8_t> &message) {
+    tryWriteBytes(message);
+}
+
 void SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes) {
     const auto bytesRead{ USBSerial_m.readBytes(&*buffer, expectedBytes) };
 
@@ -59,6 +63,10 @@ void SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t ex
 }
 
 void SerialParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {
+    if (!USBSerial_m.availableForWrite()) {
+        throw NoSpaceAvailableForWrite{};
+    }
+
     const auto bytesWritten{ USBSerial_m.write(buffer.data(), buffer.size()) };
 
     if (bytesWritten != buffer.size()) {
