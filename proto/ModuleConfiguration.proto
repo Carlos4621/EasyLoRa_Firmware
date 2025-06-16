@@ -10,16 +10,19 @@ message ModuleConfiguration {
     uint32 addressHighByte = 1;
     uint32 addressLowByte = 2;
     uint32 NETID = 3;
+    uint32 Channel = 4;
 
-    bool enableRSSI = 4;
-    bool enableFixedTransmitionMode = 5;
-    bool enableRepeaterMode = 6;
-    bool enableLBT = 7;
-    bool enableWORMode = 8;
+    bool enableRSSI = 5;
+    bool RSSIByte = 6;
+    bool enableAbnormalLog = 7;
+    bool enableFixedTransmitionMode = 8;
+    bool enableRepeaterMode = 9;
+    bool enableLBT = 10;
+    bool enableWORMode = 11;
 
-    AirDataRate airDataRate = 9;
-    SubpacketLenght subpacketLenght = 10;
-    SerialPortParityByte serialPortParityByte = 11;
-    WORCycle worCycle = 12;
-    UARTBaudRate uartBaudRate = 13;
+    AirDataRate airDataRate = 12;
+    SubpacketLenght subpacketLenght = 13;
+    SerialPortParityByte serialPortParityByte = 14;
+    WORCycle worCycle = 15;
+    UARTBaudRate uartBaudRate = 16;
 }
