@@ -21,6 +21,8 @@ public:
     E22_400T37S_Configurator(arduino::HardwareSerial& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin);
 
     /// @brief Inicializa los pines necesarios, llamar antes de cualquier otra función
+    /// @note Esto NO inicializa el puerto serial debido a que la clase no lo usa necesariamente, esto no es problema ya que cuando se cambia la configuración se establece al
+    /// baud rate necesario
     void begin();
 
     /// @brief Cambia al modo deseado
@@ -28,6 +30,8 @@ public:
     /// @note La función espera a que aux esté HIGH, cambia el modo, espera de nuevo a aux y espera otros 2ms, tal como dice la documentación que debe ser
     void setMode(Modes modeToSet);
 
+    /// @brief Establece la configuración enviada
+    /// @param newConfiguration Nueva configuración a establecer
     void setConfiguration(ModuleConfiguration newConfiguration);
 
     /// @brief Obtiene la configuración del módulo
@@ -58,6 +62,9 @@ private:
     DigitalOutput m1_pin_m;
     DigitalInput auxPin_m;
     Modes currentMode_m{ Modes::Transparent };
+
+    Modes previousMode_m{ Modes::Transparent };
+    uint64_t previousBaudRate_m{ 0 };
 
     void setTransparentMode();
     void setWORMode();
@@ -105,6 +112,9 @@ private:
 
     [[nodiscard]]
     static WORCycle getWORCycleFromREG3(uint8_t REG3);
+
+    void setupForConfiguration();
+    void restorePreviousValues();
 };
 
 class ResponseDontReceived : public std::exception {

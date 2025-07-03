@@ -8,8 +8,6 @@ E22_400T37S_Configurator::E22_400T37S_Configurator(arduino::HardwareSerial& seri
 {
 }
 
-/* Debido a que el UART no se usa necesariamente en la clase, no se inicializa, pero no hay problema debido a que este se configura cada 
-   vez que intentas modificar una configuración */
 void E22_400T37S_Configurator::begin() {
     m0_pin_m.begin();
     m1_pin_m.begin();
@@ -49,25 +47,22 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
 }
 
 void E22_400T37S_Configurator::setConfiguration(ModuleConfiguration newConfiguration) {
-    
+    // Pasos: 1- armar mensaje 2- enviar mensaje 3- verificar respuesta
 }
 
 ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
-    const auto previousMode{ currentMode_m };
-    const auto previousBaudRate{ serialToLoRa_m.getBaudRate() };
-    setMode(Modes::Configuration);
-
-    serialToLoRa_m.setBaudRate(BaudRateForConfiguration);
+    setupForConfiguration();
 
     serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(ReadAllConfigurationCommand.cbegin(), ReadAllConfigurationCommand.cend()));
-
     const auto message{ serialToLoRa_m.readMessage() };
+
+    restorePreviousValues();
 
     if (!message.has_value()) {
         throw ResponseDontReceived{};
     }
 
-    const auto response{ message.value() };
+    const auto& response{ message.value() };
 
     if (response.size() != ExpectedConfigurationResponseSize) {
         throw AbnormalResponse{ response };
@@ -302,4 +297,17 @@ WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) {
     default:
         throw AbnormalRegister{ "WORCycle", value };
     }
+}
+
+void E22_400T37S_Configurator::setupForConfiguration() {
+    previousMode_m = currentMode_m;
+    setMode(Modes::Configuration);
+
+    previousBaudRate_m = serialToLoRa_m.getBaudRate();
+    serialToLoRa_m.setBaudRate(BaudRateForConfiguration);
+}
+
+void E22_400T37S_Configurator::restorePreviousValues() {
+    setMode(previousMode_m);
+    serialToLoRa_m.setBaudRate(previousBaudRate_m);
 }
