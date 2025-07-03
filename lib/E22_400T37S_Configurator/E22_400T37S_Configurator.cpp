@@ -48,6 +48,8 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
 
 void E22_400T37S_Configurator::setConfiguration(ModuleConfiguration newConfiguration) {
     // Pasos: 1- armar mensaje 2- enviar mensaje 3- verificar respuesta
+
+    std::array<uint8_t, 10> messageToSend;
 }
 
 ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {

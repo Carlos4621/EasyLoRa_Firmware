@@ -42,8 +42,12 @@ public:
 
 private:
 
-    static constexpr std::array<uint8_t, 2> WriteResponsePrefix{ 0xC1, 0x00 };
-    static constexpr std::array<uint8_t, 3> ReadAllConfigurationCommand{ WriteResponsePrefix[0], WriteResponsePrefix[1], 0x07 };
+    static constexpr uint8_t WriteReadCommandPrefix{ 0xC0 };
+    static constexpr uint8_t WriteReadResponsePrefix{ 0xC1 };
+    static constexpr uint8_t RegisterStartAddress{ 0x00 };
+    static constexpr uint8_t RegistersLenght{ 0x07 };
+
+    static constexpr std::array ReadAllConfigurationCommand{ WriteReadCommandPrefix, RegisterStartAddress, RegistersLenght };
 
     static constexpr uint16_t ModeSwitchingDelayInMs{ 2 };
     static constexpr uint16_t BaudRateForConfiguration{ 9600 };
