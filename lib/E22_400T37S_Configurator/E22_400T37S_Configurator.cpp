@@ -137,107 +137,25 @@ void E22_400T37S_Configurator::setComponentsFromREG3(ModuleConfiguration &config
 UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) {
     const uint8_t value{ REG0 >> 5 };
 
-    switch (value) {
-    case 0b000:
-        return UARTBaudRate_UART_1200_BPS;
-
-    case 0b001:
-        return UARTBaudRate_UART_2400_BPS;
-
-    case 0b010:
-        return UARTBaudRate_UART_4800_BPS;
-
-    case 0b011:
-        return UARTBaudRate_UART_9600_BPS;
-    
-    case 0b100:
-        return UARTBaudRate_UART_19200_BPS;
-
-    case 0b101:
-        return UARTBaudRate_UART_38400_BPS;
-
-    case 0b110:
-        return UARTBaudRate_UART_57600_BPS;
-
-    case 0b111:
-        return UARTBaudRate_UART_115200_BPS;
-
-    default:
-        throw AbnormalRegister{ "BaudRate", value };
-    }
+    return static_cast<UARTBaudRate>(value);
 }
 
 SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG0) {
     const uint8_t value{ (REG0 >> 3) & 0b11 };
 
-    switch (value) {
-    case 0b00:
-    case 0b11:
-        return SerialPortParityByte_Byte_8N1;
-    
-    case 0b01:
-        return SerialPortParityByte_Byte_8O1;
-
-    case 0b10:
-        return SerialPortParityByte_Byte_8E1;
-
-    default:
-        throw AbnormalRegister{ "ParityByte", value };
-    }
+    return static_cast<SerialPortParityByte>(value);
 }
 
 AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) {
     const uint8_t value{ REG0 & 0b111 };
 
-    switch (value) {
-    case 0b000:
-        return AirDataRate_AirRate_300_BPS;
-
-    case 0b001:
-        return AirDataRate_AirRate_1200_BPS;
-
-    case 0b010:
-        return AirDataRate_AirRate_2400_BPS;
-
-    case 0b011:
-        return AirDataRate_AirRate_4800_BPS;
-
-    case 0b100:
-        return AirDataRate_AirRate_9600_BPS;
-    
-    case 0b101:
-        return AirDataRate_AirRate_19200_BPS;
-
-    case 0b110:
-        return AirDataRate_AirRate_38400_BPS;
-
-    case 0b111:
-        return AirDataRate_AirRate_62500_BPS;
-    
-    default:
-        throw AbnormalRegister{ "AirDataRate", value };
-    }
+    return static_cast<AirDataRate>(value);
 }
 
 SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1) {
     const uint8_t value{ REG1 >> 6 };
 
-    switch (value) {
-    case 0b00:
-        return SubpacketLenght_Bytes_Lenght_240;
-    
-    case 0b01:
-        return SubpacketLenght_Bytes_Lenght_128;
-
-    case 0b10:
-        return SubpacketLenght_Bytes_Lenght_64;
-
-    case 0b11:
-        return SubpacketLenght_Bytes_Lenght_32;
-    
-    default:
-        throw AbnormalRegister{ "SubpacketLenght", value };
-    }
+    return static_cast<SubpacketLenght>(value);
 }
 
 bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) noexcept {
@@ -271,34 +189,7 @@ bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) noexcept {
 WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) {
     const uint8_t value{ REG3 & 0b111 };
 
-    switch (value) {
-    case 0b000:
-        return WORCycle_WORCycle_500_ms;
-
-    case 0b001:
-        return WORCycle_WORCycle_1000_ms;
-
-    case 0b010:
-        return WORCycle_WORCycle_1500_ms;
-
-    case 0b011:
-        return WORCycle_WORCycle_2000_ms;
-    
-    case 0b100:
-        return WORCycle_WORCycle_2500_ms;
-
-    case 0b101:
-        return WORCycle_WORCycle_3000_ms;
-
-    case 0b110:
-        return WORCycle_WORCycle_3500_ms;
-
-    case 0b111:
-        return WORCycle_WORCycle_4000_ms;
-    
-    default:
-        throw AbnormalRegister{ "WORCycle", value };
-    }
+    return static_cast<WORCycle>(value);
 }
 
 void E22_400T37S_Configurator::setupForConfiguration() {
