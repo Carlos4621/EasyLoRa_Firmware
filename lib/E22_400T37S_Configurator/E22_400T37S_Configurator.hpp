@@ -61,6 +61,8 @@ private:
     static constexpr uint8_t Channel_Byte{ 5 };
     static constexpr uint8_t REG3_Byte{ 6 };
 
+    static constexpr uint8_t MaxChannel{ 83 };
+
     SerialParser serialToLoRa_m;
     DigitalOutput m0_pin_m;
     DigitalOutput m1_pin_m;
@@ -119,6 +121,8 @@ private:
 
     void setupForConfiguration();
     void restorePreviousValues();
+
+    void verifyChannelValue(uint8_t channelValue);
 };
 
 class ResponseDontReceived : public std::exception {

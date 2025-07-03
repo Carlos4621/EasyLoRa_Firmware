@@ -80,6 +80,7 @@ ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
 
     setComponentsFromREG1(configuration, response[REG1_Byte]);
     
+    verifyChannelValue(response[Channel_Byte]);
     configuration.Channel = response[Channel_Byte];
 
     setComponentsFromREG3(configuration, response[REG3_Byte]);
@@ -203,4 +204,10 @@ void E22_400T37S_Configurator::setupForConfiguration() {
 void E22_400T37S_Configurator::restorePreviousValues() {
     setMode(previousMode_m);
     serialToLoRa_m.setBaudRate(previousBaudRate_m);
+}
+
+void E22_400T37S_Configurator::verifyChannelValue(uint8_t channelValue) {
+    if (channelValue > MaxChannel) {
+        throw AbnormalRegister{ "Channel", channelValue };
+    }
 }
