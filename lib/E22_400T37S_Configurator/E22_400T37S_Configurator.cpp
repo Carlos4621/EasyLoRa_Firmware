@@ -52,7 +52,7 @@ void E22_400T37S_Configurator::setConfiguration(ModuleConfiguration newConfigura
     std::array<uint8_t, 10> messageToSend;
 }
 
-ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
+tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_Configurator::getConfiguration() {
     setupForConfiguration();
 
     serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(ReadAllConfigurationCommand.cbegin(), ReadAllConfigurationCommand.cend()));
@@ -61,13 +61,17 @@ ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
     restorePreviousValues();
 
     if (!message.has_value()) {
-        throw ResponseDontReceived{};
+        return tl::make_unexpected(std::make_shared<ResponseDontReceived>());
     }
 
     const auto& response{ message.value() };
 
     if (response.size() != ExpectedConfigurationResponseSize) {
-        throw AbnormalResponse{ response };
+        return tl::make_unexpected(std::make_shared<AbnormalResponse>(response));
+    }
+
+    if (!isValidChannel(response[Channel_Byte])) {
+        return tl::make_unexpected(std::make_shared<AbnormalRegister>("Channel", response[Channel_Byte]));
     }
 
     ModuleConfiguration configuration;
@@ -80,7 +84,6 @@ ModuleConfiguration E22_400T37S_Configurator::getConfiguration() {
 
     setComponentsFromREG1(configuration, response[REG1_Byte]);
     
-    verifyChannelValue(response[Channel_Byte]);
     configuration.Channel = response[Channel_Byte];
 
     setComponentsFromREG3(configuration, response[REG3_Byte]);
@@ -109,7 +112,7 @@ void E22_400T37S_Configurator::setSleepMode() {
 }
 
 void E22_400T37S_Configurator::waitForAuxRaising() {
-    while (!auxPin_m.read()) {
+    while(!auxPin_m.read()) {
         delay(1); // watchdog
     }
 }
@@ -206,8 +209,6 @@ void E22_400T37S_Configurator::restorePreviousValues() {
     serialToLoRa_m.setBaudRate(previousBaudRate_m);
 }
 
-void E22_400T37S_Configurator::verifyChannelValue(uint8_t channelValue) {
-    if (channelValue > MaxChannel) {
-        throw AbnormalRegister{ "Channel", channelValue };
-    }
+bool E22_400T37S_Configurator::isValidChannel(uint8_t channel) {
+    return channel <= MaxChannel;
 }

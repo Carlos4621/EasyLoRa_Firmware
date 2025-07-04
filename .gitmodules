@@ -1,3 +1,6 @@
 [submodule "lib/ArduinoPins"]
 	path = lib/ArduinoPins
 	url = https://github.com/Carlos4621/ArduinoPins
+[submodule "lib/expected"]
+	path = lib/expected
+	url = https://github.com/TartanLlama/expected

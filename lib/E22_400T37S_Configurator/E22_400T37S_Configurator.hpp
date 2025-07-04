@@ -5,14 +5,17 @@
 #include "SerialParser.hpp"
 #include "SerialUART.h"
 #include "DigitalInput.hpp"
+#include <pb.h>
 #include "ModuleConfiguration.pb.h"
 #include <array>
 #include <tuple>
+#include "tl/expected.hpp"
+#include <memory>
 
 class E22_400T37S_Configurator {
 public:
     enum class Modes : uint8_t { Transparent = 0, WOR, Configuration, Sleep };
-    
+
     /// @brief Constructor base
     /// @param serialToLoRa Serial a el módulo LoRa
     /// @param m0_pin Pin a M0
@@ -35,10 +38,10 @@ public:
     void setConfiguration(ModuleConfiguration newConfiguration);
 
     /// @brief Obtiene la configuración del módulo
-    /// @return La configuración del módulo
+    /// @return Expected con la configuración del módulo, AbnormalRegister en caso de un valor anómalo en un registro, ResponseDontReceived en caso de que no haya respuesta
     /// @note El método se encarga de colocar el módulo en modo configuración y restaura el modo al que estaba originalmente
     [[nodiscard]]
-    ModuleConfiguration getConfiguration();
+    tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> getConfiguration();
 
 private:
 
@@ -122,11 +125,14 @@ private:
     void setupForConfiguration();
     void restorePreviousValues();
 
-    void verifyChannelValue(uint8_t channelValue);
+    [[nodiscard]]
+    static bool isValidChannel(uint8_t channel);
 };
 
 class ResponseDontReceived : public std::exception {
 public:
+
+    [[nodiscard]]
     const char* what() const noexcept override {
         return "Response don't received";
     }
@@ -138,6 +144,7 @@ public:
         errorMessage_m = std::string{ "Abnormal response: " } + std::string(response.cbegin(), response.cend());
     }
 
+    [[nodiscard]]
     const char* what() const noexcept override {
         return errorMessage_m.data();
     }
@@ -152,6 +159,7 @@ public:
         errorMessage_m = std::string("Abnormal register: ") + registerName.data() + " with value: " + std::to_string(value);
     }
 
+    [[nodiscard]]
     const char* what() const noexcept override {
         return errorMessage_m.data();
     }
