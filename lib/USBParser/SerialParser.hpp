@@ -60,7 +60,7 @@ private:
     void tryWriteBytes(const std::vector<uint8_t>& buffer);
 };
 
-class MessageSizeMissmatch : std::exception {
+class MessageSizeMissmatch : public std::exception {
 public:
 
     MessageSizeMissmatch(size_t sizeExpected, size_t sizeReceived, bool onRead)
