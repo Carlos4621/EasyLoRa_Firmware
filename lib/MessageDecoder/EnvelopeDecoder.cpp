@@ -1,6 +1,6 @@
 #include "EnvelopeDecoder.hpp"
 
-Envelope EnvelopeDecoder::decode(const std::vector<uint8_t>& encodedData) {
+tl::expected<Envelope, std::shared_ptr<std::exception>> EnvelopeDecoder::decode(const std::vector<uint8_t>& encodedData) {
     Envelope decodedData = Envelope_init_zero;
 
     pb_istream_t decodeStream = pb_istream_from_buffer(encodedData.data(), encodedData.size());
@@ -8,7 +8,7 @@ Envelope EnvelopeDecoder::decode(const std::vector<uint8_t>& encodedData) {
     const bool decodeStatus{ pb_decode(&decodeStream, Envelope_fields, &decodedData) };
 
     if(!decodeStatus) {
-        throw DecodificationError{};
+        return tl::make_unexpected(std::make_shared<DecodificationError>());
     }
 
     return decodedData;
