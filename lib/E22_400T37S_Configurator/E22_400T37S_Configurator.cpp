@@ -139,25 +139,25 @@ void E22_400T37S_Configurator::setComponentsFromREG3(ModuleConfiguration &config
 }
 
 UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) {
-    const uint8_t value{ REG0 >> 5 };
+    const auto value{ static_cast<uint8_t>(REG0) >> 5 };
 
     return static_cast<UARTBaudRate>(value);
 }
 
 SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG0) {
-    const uint8_t value{ (REG0 >> 3) & 0b11 };
+    const auto value{ (static_cast<uint8_t>(REG0) >> 3) & 0b11 };
 
     return static_cast<SerialPortParityByte>(value);
 }
 
 AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) {
-    const uint8_t value{ REG0 & 0b111 };
+    const auto value{ static_cast<uint8_t>(REG0) & 0b111 };
 
     return static_cast<AirDataRate>(value);
 }
 
 SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1) {
-    const uint8_t value{ REG1 >> 6 };
+    const auto value{ static_cast<uint8_t>(REG1) >> 6 };
 
     return static_cast<SubpacketLenght>(value);
 }
@@ -191,7 +191,7 @@ bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) noexcept {
 }
 
 WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) {
-    const uint8_t value{ REG3 & 0b111 };
+    const auto value{ static_cast<uint8_t>(REG3) & 0b111 };
 
     return static_cast<WORCycle>(value);
 }
