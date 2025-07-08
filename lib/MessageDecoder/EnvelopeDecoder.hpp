@@ -13,12 +13,7 @@
 class EnvelopeDecoder {
 public:
 
-    class DecodificationError : public std::exception {
-    public:
-        const char* what() const noexcept override {
-            return "Unable to decode the data";
-        }
-    };
+    class DecodificationError;
 
     /// @brief Decodifica una serie de bytes en un SerialMessage
     /// @param encodedData Data a decodificar

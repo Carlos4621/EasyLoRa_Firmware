@@ -1,5 +1,12 @@
 #include "EnvelopeDecoder.hpp"
 
+class EnvelopeDecoder::DecodificationError : public std::exception {
+public:
+    const char* what() const noexcept override {
+        return "Unable to decode the data";
+    }
+};
+
 tl::expected<Envelope, EnvelopeDecoder::DecodificationError> EnvelopeDecoder::decode(const std::vector<uint8_t>& encodedData) {
     Envelope decodedData = Envelope_init_zero;
 
