@@ -13,19 +13,18 @@
 class EnvelopeDecoder {
 public:
 
+    class DecodificationError : public std::exception {
+    public:
+        const char* what() const noexcept override {
+            return "Unable to decode the data";
+        }
+    };
+
     /// @brief Decodifica una serie de bytes en un SerialMessage
     /// @param encodedData Data a decodificar
     /// @return tl::expected con data decodificada, DecodificationError en caso de error de decodificación
     [[nodiscard]]
-    static tl::expected<Envelope, std::shared_ptr<std::exception>> decode(const std::vector<uint8_t>& encodedData);
-};
-
-class DecodificationError : public std::exception {
-public:
-
-    const char* what() const noexcept override {
-        return "Unable to decode the data";
-    }
+    static tl::expected<Envelope, DecodificationError> decode(const std::vector<uint8_t>& encodedData);
 };
 
 #endif // !ENVELOPE_DECODER_HEADER
