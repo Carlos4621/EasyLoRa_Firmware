@@ -6,10 +6,14 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include "tl/expected.hpp"
+#include <memory>
 
 /// @brief Clase encargada del formateo de mensajes enviados y recibidos desde un puerto USB
 class SerialParser {
 public:
+
+    class MessageSizeMissmatch;
 
     /// @brief Constructor base
     /// @param serialUSB Puerto en donde se enviarán y recibirán paquetes donde el primer byte el tamaño del mensaje. Opcionalmente se puede incluir un prefix
@@ -30,24 +34,27 @@ public:
 
     /// @brief Intenta leer un mensaje del puerto USB
     /// @param prefixLength Longitud del prefix
-    /// @return std::optional con std::vector<uint8_t> que contiene el mensaje leído si se pudo leer uno, o std::nullopt si no hay mensajes disponibles.
+    /// @return tl::expected con std::vector<uint8_t> que contiene el mensaje leído si se pudo leer uno, MessageSizeMissmatch si no hay mensajes disponibles.
     [[nodiscard]]
-    std::optional<std::vector<uint8_t>> readMessage(uint8_t prefixLength = 0);
+    tl::expected<std::vector<uint8_t>, MessageSizeMissmatch> readMessage(uint8_t prefixLength = 0);
 
     /// @brief Escribe mensajes en el puerto SerialUSB.
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
     /// @example 0xAA 0xBB => 0x02 0xAA 0xBB 
-    void writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix = {});
+    [[nodiscard]]
+    tl::expected<void, MessageSizeMissmatch> writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix = {});
 
     /// @brief Método de conveniencia para strings, sigue la misma lógica que writeMessage
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
-    void writeString(std::string_view message, std::string_view prefix = "");
+    [[nodiscard]]
+    tl::expected<void, MessageSizeMissmatch> writeString(std::string_view message, std::string_view prefix = "");
 
     /// @brief Escribe el mensaje tal como está, no se agrega prefix ni tamaño del mensaje
     /// @param message Mensaje a enviar
-    void writeCrudeMessage(const std::vector<uint8_t>& message);
+    [[nodiscard]]
+    tl::expected<void, MessageSizeMissmatch> writeCrudeMessage(const std::vector<uint8_t>& message);
 
 private:
 
@@ -56,40 +63,11 @@ private:
     arduino::HardwareSerial& USBSerial_m;
     uint32_t baudRate_m;
 
-    void tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes);
-    void tryWriteBytes(const std::vector<uint8_t>& buffer);
-};
-
-class MessageSizeMissmatch : public std::exception {
-public:
-
-    MessageSizeMissmatch(size_t sizeExpected, size_t sizeReceived, bool onRead)
-    : sizeExpected_m{ sizeExpected }
-    , sizeReceived_m{ sizeReceived }
-    , onRead_m{ onRead }
-    {
-        errorMessage_m = (std::string("Tamaño del mensaje incorrecto. Esperado: ") + std::to_string(sizeExpected_m) + (onRead_m ? " Recibido: " : " Escrito: ") 
-        + std::to_string(sizeReceived_m));
-    }
-
-    const char* what() const noexcept override {
-        return errorMessage_m.c_str();
-    }
-
-private:
-
-    size_t sizeExpected_m;
-    size_t sizeReceived_m;
-    bool onRead_m;
-    std::string errorMessage_m;
-};
-
-class NoSpaceAvailableForWrite : public std::exception {
-public:
-
-    const char* what() const noexcept override {
-        return "No hay espacio disponible para escribir en el puerto USB.";
-    }
+    [[nodiscard]]
+    tl::expected<void, MessageSizeMissmatch> tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes);
+    
+    [[nodiscard]]
+    tl::expected<void, MessageSizeMissmatch> tryWriteBytes(const std::vector<uint8_t>& buffer);
 };
 
 #endif // !SERIAL_PARSER_HEADER
