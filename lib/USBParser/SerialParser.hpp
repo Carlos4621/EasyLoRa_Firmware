@@ -2,7 +2,6 @@
 #define SERIAL_PARSER_HEADER
 
 #include <Arduino.h>
-#include <optional>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -34,13 +33,15 @@ public:
 
     /// @brief Intenta leer un mensaje del puerto USB
     /// @param prefixLength Longitud del prefix
-    /// @return tl::expected con std::vector<uint8_t> que contiene el mensaje leído si se pudo leer uno, MessageSizeMissmatch si no hay mensajes disponibles.
+    /// @return tl::expected con std::vector<uint8_t> que contiene el mensaje leído si se pudo leer uno,
+    /// MessageSizeMissmatch si el byte de longitud del mensaje es incorrecto
     [[nodiscard]]
     tl::expected<std::vector<uint8_t>, MessageSizeMissmatch> readMessage(uint8_t prefixLength = 0);
 
     /// @brief Escribe mensajes en el puerto SerialUSB.
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
+    /// @return tl::excepted con MessageSizeMissmatch si el byte de longitud del mensaje es incorrecto
     /// @example 0xAA 0xBB => 0x02 0xAA 0xBB 
     [[nodiscard]]
     tl::expected<void, MessageSizeMissmatch> writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix = {});
@@ -48,11 +49,13 @@ public:
     /// @brief Método de conveniencia para strings, sigue la misma lógica que writeMessage
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
+    /// @return tl::expected con MessageSizeMissmatch si el byte de longitud del mensaje es incorrecto
     [[nodiscard]]
     tl::expected<void, MessageSizeMissmatch> writeString(std::string_view message, std::string_view prefix = "");
 
     /// @brief Escribe el mensaje tal como está, no se agrega prefix ni tamaño del mensaje
     /// @param message Mensaje a enviar
+    /// @return tl::expected con MessageSizeMissmatch si el byte de longitud del mensaje es incorrecto
     [[nodiscard]]
     tl::expected<void, MessageSizeMissmatch> writeCrudeMessage(const std::vector<uint8_t>& message);
 
