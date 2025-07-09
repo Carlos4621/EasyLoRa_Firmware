@@ -1,25 +1,5 @@
 #include "SerialParser.hpp"
 
-class SerialParser::MessageSizeMissmatch : public std::exception {
-public:
-
-    MessageSizeMissmatch(size_t sizeExpected, size_t sizeReceived, bool onRead) 
-        : errorMessage_m{
-            std::string{"Tamaño del mensaje incorrecto. Esperado: "} + 
-            std::to_string(sizeExpected) + 
-            (onRead ? " Recibido: " : " Escrito: ") + 
-            std::to_string(sizeReceived)
-        } {}
-
-    const char* what() const noexcept override {
-        return errorMessage_m.c_str();
-    }
-
-private:
-
-    std::string errorMessage_m;
-};
-
 SerialParser::SerialParser(arduino::HardwareSerial& serialUSB, uint32_t baudRate)
     : USBSerial_m{ serialUSB }
     , baudRate_m{ baudRate } {

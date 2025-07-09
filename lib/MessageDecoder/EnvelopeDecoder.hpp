@@ -22,4 +22,13 @@ public:
     static tl::expected<Envelope, DecodificationError> decode(const std::vector<uint8_t>& encodedData);
 };
 
+class EnvelopeDecoder::DecodificationError : public std::exception {
+public:
+
+    [[nodiscard]]
+    const char* what() const noexcept override {
+        return "Unable to decode the data";
+    }
+};
+
 #endif // !ENVELOPE_DECODER_HEADER
