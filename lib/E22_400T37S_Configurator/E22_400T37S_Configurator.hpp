@@ -75,6 +75,25 @@ private:
 
     static constexpr uint8_t Max_Channel{ 83 };
 
+    static constexpr uint8_t UART_Baud_Rate_Shift{ 5 };
+    static constexpr uint8_t Parity_Byte_Shift{ 3 };
+    static constexpr uint8_t Parity_Byte_Mask{ 0b11 };
+    static constexpr uint8_t Air_Data_Rate_Mask{ 0b111 };
+
+    static constexpr uint8_t Subpacket_Length_Shift{ 6 };
+    static constexpr uint8_t RSSI_Noise_Shift{ 5 };
+    static constexpr uint8_t Abnormal_Log_Shift{ 2 };
+    static constexpr uint8_t Single_Bit_Mask{ 1 };
+
+    static constexpr uint8_t RSSI_Enabled_Shift{ 7 };
+    static constexpr uint8_t Transmission_Method_Shift{ 6 };
+    static constexpr uint8_t Relay_Function_Shift{ 5 };
+    static constexpr uint8_t LBT_Enabled_Shift{ 4 };
+    static constexpr uint8_t WOR_Mode_Shift{ 3 };
+    static constexpr uint8_t WOR_Cycle_Mask{ 0b111 };
+
+    static constexpr uint8_t Watchdog_Delay_Ms{ 1 };
+
     SerialParser serialToLoRa_m;
     DigitalOutput m0_pin_m;
     DigitalOutput m1_pin_m;

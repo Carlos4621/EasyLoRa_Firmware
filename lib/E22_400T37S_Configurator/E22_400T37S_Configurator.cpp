@@ -118,7 +118,7 @@ void E22_400T37S_Configurator::setSleepMode() {
 
 void E22_400T37S_Configurator::waitForAuxRaising() {
     while(!auxPin_m.read()) {
-        delay(1); // watchdog
+        delay(Watchdog_Delay_Ms); // watchdog
     }
 }
 
@@ -144,59 +144,59 @@ void E22_400T37S_Configurator::setComponentsFromREG3(ModuleConfiguration &config
 }
 
 UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) {
-    const auto value{ static_cast<uint8_t>(REG0) >> 5 };
+    const auto value{ static_cast<uint8_t>(REG0) >> UART_Baud_Rate_Shift };
 
     return static_cast<UARTBaudRate>(value);
 }
 
 SerialPortParityByte E22_400T37S_Configurator::getParityByteFromREG0(uint8_t REG0) {
-    const auto value{ (static_cast<uint8_t>(REG0) >> 3) & 0b11 };
+    const auto value{ (static_cast<uint8_t>(REG0) >> Parity_Byte_Shift) & Parity_Byte_Mask };
 
     return static_cast<SerialPortParityByte>(value);
 }
 
 AirDataRate E22_400T37S_Configurator::getAirDataRateFromREG0(uint8_t REG0) {
-    const auto value{ static_cast<uint8_t>(REG0) & 0b111 };
+    const auto value{ static_cast<uint8_t>(REG0) & Air_Data_Rate_Mask };
 
     return static_cast<AirDataRate>(value);
 }
 
 SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1) {
-    const auto value{ static_cast<uint8_t>(REG1) >> 6 };
+    const auto value{ static_cast<uint8_t>(REG1) >> Subpacket_Length_Shift };
 
     return static_cast<SubpacketLenght>(value);
 }
 
 bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) {
-    return (REG1 >> 5) & 1;
+    return (REG1 >> RSSI_Noise_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) {
-    return (REG1 >> 2) & 1;
+    return (REG1 >> Abnormal_Log_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getRSSIEnabledFromREG3(uint8_t REG3) {
-    return (REG3 >> 7);
+    return (REG3 >> RSSI_Enabled_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) {
-    return (REG3 >> 6) & 1;
+    return (REG3 >> Transmission_Method_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) {
-    return (REG3 >> 5) & 1;
+    return (REG3 >> Relay_Function_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) {
-    return (REG3 >> 4) & 1;
+    return (REG3 >> LBT_Enabled_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) {
-    return (REG3 >> 3) & 1;
+    return (REG3 >> WOR_Mode_Shift) & Single_Bit_Mask;
 }
 
 WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) {
-    const auto value{ static_cast<uint8_t>(REG3) & 0b111 };
+    const auto value{ static_cast<uint8_t>(REG3) & WOR_Cycle_Mask };
 
     return static_cast<WORCycle>(value);
 }
