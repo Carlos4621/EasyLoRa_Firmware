@@ -14,7 +14,7 @@ void SerialParser::setBaudRate(uint32_t baudRate) {
     USBSerial_m.begin(baudRate_m);
 }
 
-uint32_t SerialParser::getBaudRate() const noexcept {
+uint32_t SerialParser::getBaudRate() const {
     return baudRate_m;
 }
 
