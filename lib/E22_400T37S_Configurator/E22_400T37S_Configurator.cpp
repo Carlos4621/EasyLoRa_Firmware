@@ -41,12 +41,12 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
 
     waitForAuxRaising();
 
-    delay(ModeSwitchingDelayInMs);
+    delay(Mode_Switching_Delay_In_Ms);
 
     currentMode_m = modeToSet;
 }
 
-void E22_400T37S_Configurator::setConfiguration(ModuleConfiguration newConfiguration) {
+void E22_400T37S_Configurator::setConfiguration(const ModuleConfiguration& newConfiguration) {
     // Pasos: 1- armar mensaje 2- enviar mensaje 3- verificar respuesta
 
     std::array<uint8_t, 10> messageToSend;
@@ -54,19 +54,24 @@ void E22_400T37S_Configurator::setConfiguration(ModuleConfiguration newConfigura
 
 tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_Configurator::getConfiguration() {
     setupForConfiguration();
+    
+    const auto status{ serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(Read_All_Configurations_Command.cbegin(), Read_All_Configurations_Command.cend())) };
 
-    serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(ReadAllConfigurationCommand.cbegin(), ReadAllConfigurationCommand.cend()));
-    const auto message{ serialToLoRa_m.readMessage() };
+    if (!status) {
+        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(status.error()));
+    }
+
+    const auto message{ serialToLoRa_m.readMessage(Prefix_Length) };
 
     restorePreviousValues();
 
-    if (!message.has_value()) {
-        return tl::make_unexpected(std::make_shared<ResponseDontReceived>());
+    if (!message) {
+        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(message.error()));
     }
 
     const auto& response{ message.value() };
 
-    if (response.size() != ExpectedConfigurationResponseSize) {
+    if (response.size() != Expected_Configuration_Response_Size) {
         return tl::make_unexpected(std::make_shared<AbnormalResponse>(response));
     }
 
@@ -76,8 +81,8 @@ tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_C
 
     ModuleConfiguration configuration;
 
-    configuration.addressHighByte = response[HighAddress_Byte];
-    configuration.addressLowByte = response[LowAddress_Byte];
+    configuration.addressHighByte = response[High_Address_Byte];
+    configuration.addressLowByte = response[Low_Address_Byte];
     configuration.NETID = response[NETID_Byte];
 
     setComponentsFromREG0(configuration, response[REG0_Byte]);
@@ -162,31 +167,31 @@ SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1
     return static_cast<SubpacketLenght>(value);
 }
 
-bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) noexcept {
+bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) {
     return (REG1 >> 5) & 1;
 }
 
-bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) noexcept {
+bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) {
     return (REG1 >> 2) & 1;
 }
 
-bool E22_400T37S_Configurator::getRSSIEnabledFromREG3(uint8_t REG3) noexcept {
+bool E22_400T37S_Configurator::getRSSIEnabledFromREG3(uint8_t REG3) {
     return (REG3 >> 7);
 }
 
-bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) noexcept {
+bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) {
     return (REG3 >> 6) & 1;
 }
 
-bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) noexcept {
+bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) {
     return (REG3 >> 5) & 1;
 }
 
-bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) noexcept {
+bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) {
     return (REG3 >> 4) & 1;
 }
 
-bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) noexcept {
+bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) {
     return (REG3 >> 3) & 1;
 }
 
@@ -201,7 +206,7 @@ void E22_400T37S_Configurator::setupForConfiguration() {
     setMode(Modes::Configuration);
 
     previousBaudRate_m = serialToLoRa_m.getBaudRate();
-    serialToLoRa_m.setBaudRate(BaudRateForConfiguration);
+    serialToLoRa_m.setBaudRate(Baud_Rate_For_Configuration);
 }
 
 void E22_400T37S_Configurator::restorePreviousValues() {
@@ -210,5 +215,5 @@ void E22_400T37S_Configurator::restorePreviousValues() {
 }
 
 bool E22_400T37S_Configurator::isValidChannel(uint8_t channel) {
-    return channel <= MaxChannel;
+    return channel <= Max_Channel;
 }

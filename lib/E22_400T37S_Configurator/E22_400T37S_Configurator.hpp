@@ -11,9 +11,16 @@
 #include <tuple>
 #include "tl/expected.hpp"
 #include <memory>
+#include <sstream>
+#include <bitset>
 
 class E22_400T37S_Configurator {
 public:
+
+    class ResponseDontReceived;
+    class AbnormalResponse;
+    class AbnormalRegister;
+
     enum class Modes : uint8_t { Transparent = 0, WOR, Configuration, Sleep };
 
     /// @brief Constructor base
@@ -35,36 +42,38 @@ public:
 
     /// @brief Establece la configuración enviada
     /// @param newConfiguration Nueva configuración a establecer
-    void setConfiguration(ModuleConfiguration newConfiguration);
+    void setConfiguration(const ModuleConfiguration& newConfiguration);
 
     /// @brief Obtiene la configuración del módulo
-    /// @return Expected con la configuración del módulo, AbnormalRegister en caso de un valor anómalo en un registro, ResponseDontReceived en caso de que no haya respuesta
+    /// @return tl::expected con la configuración del módulo, AbnormalRegister en caso de un valor anómalo en un registro, ResponseDontReceived en caso de que no haya respuesta
     /// @note El método se encarga de colocar el módulo en modo configuración y restaura el modo al que estaba originalmente
     [[nodiscard]]
     tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> getConfiguration();
 
 private:
 
-    static constexpr uint8_t WriteReadCommandPrefix{ 0xC0 };
-    static constexpr uint8_t WriteReadResponsePrefix{ 0xC1 };
-    static constexpr uint8_t RegisterStartAddress{ 0x00 };
-    static constexpr uint8_t RegistersLenght{ 0x07 };
+    static constexpr uint8_t Write_Command_Prefix{ 0xC0 };
+    static constexpr uint8_t Write_Read_Response_Prefix{ 0xC1 };
+    static constexpr uint8_t Register_Start_Address{ 0x00 };
+    static constexpr uint8_t Registers_Length{ 0x07 };
 
-    static constexpr std::array ReadAllConfigurationCommand{ WriteReadCommandPrefix, RegisterStartAddress, RegistersLenght };
+    static constexpr std::array Read_All_Configurations_Command{ Write_Read_Response_Prefix, Register_Start_Address, Registers_Length };
 
-    static constexpr uint16_t ModeSwitchingDelayInMs{ 2 };
-    static constexpr uint16_t BaudRateForConfiguration{ 9600 };
-    static constexpr uint8_t ExpectedConfigurationResponseSize{ 10 };
+    static constexpr uint16_t Mode_Switching_Delay_In_Ms{ 2 };
+    static constexpr uint16_t Baud_Rate_For_Configuration{ 9600 };
+    static constexpr uint8_t Expected_Configuration_Response_Size{ 10 };
     
-    static constexpr uint8_t HighAddress_Byte{ 0 };
-    static constexpr uint8_t LowAddress_Byte{ 1 };
-    static constexpr uint8_t NETID_Byte{ 2 };
-    static constexpr uint8_t REG0_Byte{ 3 };
-    static constexpr uint8_t REG1_Byte{ 4 };
-    static constexpr uint8_t Channel_Byte{ 5 };
-    static constexpr uint8_t REG3_Byte{ 6 };
+    static constexpr uint8_t Prefix_Length{ 2 };
+    static constexpr uint8_t Prefix_Displacement{ 3 };
+    static constexpr uint8_t High_Address_Byte{ 0 + Prefix_Displacement };
+    static constexpr uint8_t Low_Address_Byte{ 1 + Prefix_Displacement };
+    static constexpr uint8_t NETID_Byte{ 2 + Prefix_Displacement };
+    static constexpr uint8_t REG0_Byte{ 3 + Prefix_Displacement };
+    static constexpr uint8_t REG1_Byte{ 4 + Prefix_Displacement };
+    static constexpr uint8_t Channel_Byte{ 5 + Prefix_Displacement };
+    static constexpr uint8_t REG3_Byte{ 6 + Prefix_Displacement };
 
-    static constexpr uint8_t MaxChannel{ 83 };
+    static constexpr uint8_t Max_Channel{ 83 };
 
     SerialParser serialToLoRa_m;
     DigitalOutput m0_pin_m;
@@ -99,25 +108,25 @@ private:
     static SubpacketLenght getSubpacketLenghFromREG1(uint8_t REG1);
 
     [[nodiscard]]
-    static bool getRSSINoiseFromREG1(uint8_t REG1) noexcept;
+    static bool getRSSINoiseFromREG1(uint8_t REG1);
 
     [[nodiscard]]
-    static bool getAbnormalLogEnabledFromREG1(uint8_t REG1) noexcept;
+    static bool getAbnormalLogEnabledFromREG1(uint8_t REG1);
 
     [[nodiscard]]
-    static bool getRSSIEnabledFromREG3(uint8_t REG3) noexcept;
+    static bool getRSSIEnabledFromREG3(uint8_t REG3);
 
     [[nodiscard]]
-    static bool getTransmissionMethodFromREG3(uint8_t REG3) noexcept;
+    static bool getTransmissionMethodFromREG3(uint8_t REG3);
 
     [[nodiscard]]
-    static bool getRelayFunctionREG3(uint8_t REG3) noexcept;
+    static bool getRelayFunctionREG3(uint8_t REG3);
 
     [[nodiscard]]
-    static bool getLBTEnabledFromREG3(uint8_t REG3) noexcept;
+    static bool getLBTEnabledFromREG3(uint8_t REG3);
 
     [[nodiscard]]
-    static bool getWORModeFromREG3(uint8_t REG3) noexcept;
+    static bool getWORModeFromREG3(uint8_t REG3);
 
     [[nodiscard]]
     static WORCycle getWORCycleFromREG3(uint8_t REG3);
@@ -129,7 +138,7 @@ private:
     static bool isValidChannel(uint8_t channel);
 };
 
-class ResponseDontReceived : public std::exception {
+class E22_400T37S_Configurator::ResponseDontReceived : public std::exception {
 public:
 
     [[nodiscard]]
@@ -138,11 +147,11 @@ public:
     }
 };
 
-class AbnormalResponse : public std::exception {
+class E22_400T37S_Configurator::AbnormalResponse : public std::exception {
 public:
-    explicit AbnormalResponse(const std::vector<uint8_t>& response) {
-        errorMessage_m = std::string{ "Abnormal response: " } + std::string(response.cbegin(), response.cend());
-    }
+    explicit AbnormalResponse(const std::vector<uint8_t>& response)
+    : errorMessage_m{ std::string{ "Abnormal response: " } + std::string(response.cbegin(), response.cend()) }
+    {}
 
     [[nodiscard]]
     const char* what() const noexcept override {
@@ -153,11 +162,11 @@ private:
     std::string errorMessage_m;
 };
 
-class AbnormalRegister : public std::exception {
+class E22_400T37S_Configurator::AbnormalRegister : public std::exception {
 public:
-    AbnormalRegister(std::string_view registerName, uint8_t value) {
-        errorMessage_m = std::string("Abnormal register: ") + registerName.data() + " with value: " + std::to_string(value);
-    }
+    AbnormalRegister(std::string_view registerName, uint8_t value) 
+    : errorMessage_m{ std::string("Abnormal register: ") + registerName.data() + " with value: " + std::to_string(value) }
+    {}
 
     [[nodiscard]]
     const char* what() const noexcept override {
@@ -167,6 +176,33 @@ public:
 private:
     std::string errorMessage_m;
 
+};
+
+/// @brief Método de conveniecia para obtener una string con formato que muestra las configuraciones enviadas
+/// @return std::string con las configuraciones
+/// @attention El uso de esta función aumenta DEMASIADO el peso del binario, usar con suma precaución
+static std::string stringConfigurations(const ModuleConfiguration& configs) {
+    std::ostringstream output;
+
+    output <<
+    "High address: " << std::hex << configs.addressHighByte << '\n' <<
+    "Low address: " << configs.addressLowByte << '\n' <<
+    "NETID: " << std::dec << configs.NETID << '\n' <<
+    "UART bps: " << std::bitset<3>(configs.uartBaudRate) << '\n' <<
+    "Parity byte: " << std::bitset<2>(configs.serialPortParityByte) << '\n' <<
+    "Air rate: " << std::bitset<3>(configs.airDataRate) << '\n' <<
+    "Subpacket: " << std::bitset<2>(configs.subpacketLenght) << '\n' <<
+    "RSSI noise: " << configs.RSSIByte << '\n' <<
+    "Abnormal register: " << configs.enableAbnormalLog << '\n' <<
+    "Channel: " << std::hex << configs.Channel << '\n' <<
+    "Enable RSSI: " << configs.enableRSSI << '\n' <<
+    "Transmition method: " << configs.enableFixedTransmitionMode << '\n' <<
+    "Relay Mode: " << configs.enableRepeaterMode << '\n' <<
+    "LBT enabled: " << configs.enableLBT << '\n' <<
+    "WOR mode: " << configs.enableWORMode << '\n' <<
+    "WOR cycle: " << std::bitset<3>(configs.worCycle);
+
+    return output.str();
 };
 
 #endif // E22_400T37S_CONFIGURATOR_HEADER
