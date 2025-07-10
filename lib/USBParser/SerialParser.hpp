@@ -29,7 +29,7 @@ public:
     /// @brief Obtiene el baud rate
     /// @return El baudRate actual
     [[nodiscard]]
-    uint32_t getBaudRate() const noexcept;
+    uint32_t getBaudRate() const;
 
     /// @brief Intenta leer un mensaje del puerto USB
     /// @param prefixLength Longitud del prefix
