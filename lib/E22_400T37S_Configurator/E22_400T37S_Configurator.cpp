@@ -68,6 +68,7 @@ tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::se
 
     const auto status{ serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(messageToSend.cbegin(), messageToSend.cend())) };
     if (!status) {
+        restorePreviousValues();
         return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(status.error()));
     }
 
@@ -79,9 +80,7 @@ tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::se
         return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(response.error()));
     }
 
-    if (response->size() != messageToSend.size() || (*response)[0] != Write_Read_Response_Prefix ||
-        !std::equal(response->cbegin() + 1, response->cend(), messageToSend.cbegin() + 1)) 
-    {
+    if (!isValidWriteResponse(std::vector<uint8_t>(messageToSend.cbegin(), messageToSend.cend()), response.value())) {
         return tl::make_unexpected(std::make_shared<AbnormalResponse>(response.value()));
     }
 
@@ -112,7 +111,7 @@ tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_C
 
     const auto& response{ message.value() };
 
-    if (response.size() != Expected_Read_Configuration_Response_Size) {
+    if (!isValidReadResponse(response)) {
         return tl::make_unexpected(std::make_shared<AbnormalResponse>(response));
     }
 
@@ -281,4 +280,13 @@ void E22_400T37S_Configurator::restorePreviousValues() {
 
 bool E22_400T37S_Configurator::isValidChannel(uint8_t channel) {
     return channel <= Max_Channel;
+}
+
+bool E22_400T37S_Configurator::isValidWriteResponse(const std::vector<uint8_t> &messageSent, const std::vector<uint8_t> &responseReceived) {
+    return (responseReceived.size() == messageSent.size()) && (responseReceived[0] == Write_Read_Response_Prefix) &&
+        std::equal(responseReceived.cbegin() + 1, responseReceived.cend(), messageSent.cbegin() + 1);
+}
+
+bool E22_400T37S_Configurator::isValidReadResponse(const std::vector<uint8_t> &responseReceived) {
+    return (responseReceived.size() == Expected_Read_Configuration_Response_Size) && std::equal(Read_All_Configurations_Command.cbegin(), Read_All_Configurations_Command.cend(), responseReceived.cbegin());
 }

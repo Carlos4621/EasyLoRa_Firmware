@@ -189,6 +189,12 @@ private:
 
     [[nodiscard]]
     static bool isValidChannel(uint8_t channel);
+
+    [[nodiscard]]
+    static bool isValidWriteResponse(const std::vector<uint8_t>& messageSent, const std::vector<uint8_t>& responseReceived);
+
+    [[nodiscard]]
+    static bool isValidReadResponse(const std::vector<uint8_t>& responseReceived);
 };
 
 class E22_400T37S_Configurator::ResponseDontReceived : public std::exception {
