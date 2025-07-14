@@ -46,10 +46,52 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
     currentMode_m = modeToSet;
 }
 
-void E22_400T37S_Configurator::setConfiguration(const ModuleConfiguration& newConfiguration) {
-    // Pasos: 1- armar mensaje 2- enviar mensaje 3- verificar respuesta
+tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::setConfiguration(const ModuleConfiguration& newConfiguration) {
+    // TODO: Pasos: 1- armar mensaje 2- enviar mensaje 3- verificar respuesta
 
-    std::array<uint8_t, 10> messageToSend;
+    if (!isValidChannel(newConfiguration.Channel)) {
+        return tl::make_unexpected(std::make_shared<AbnormalRegister>("Channel", newConfiguration.Channel));
+    }
+    
+    std::array<uint8_t, 10> messageToSend{ Write_Command_Prefix, Register_Start_Address, Registers_Length };
+
+    messageToSend[High_Address_Byte] = newConfiguration.addressHighByte;
+    messageToSend[Low_Address_Byte] = newConfiguration.addressLowByte;
+    messageToSend[NETID_Byte] = newConfiguration.NETID;
+
+    setComponentsToREG0(messageToSend[REG0_Byte], newConfiguration);
+    setComponentsToREG1(messageToSend[REG1_Byte], newConfiguration);
+
+    messageToSend[Channel_Byte] = newConfiguration.Channel;
+
+    setComponentsToREG3(messageToSend[REG3_Byte], newConfiguration);
+
+    setupForConfiguration();
+
+    const auto status{ serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(messageToSend.cbegin(), messageToSend.cend())) };
+    if (!status) {
+        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(status.error()));
+    }
+
+    const auto response{ serialToLoRa_m.readMessage(Prefix_Length) };
+
+    restorePreviousValues();
+
+    if (!response) {
+        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(response.error()));
+    }
+
+    if (response->size() != messageToSend.size() || (*response)[0] != Write_Read_Response_Prefix ||
+        !std::equal(response->cbegin() + 1, response->cend(), messageToSend.cbegin() + 1)) 
+    {
+        return tl::make_unexpected(std::make_shared<AbnormalResponse>(response.value()));
+    }
+
+    return {};
+}
+
+tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::setDefaultCofiguration() {
+    return setConfiguration(Default_Settings);
 }
 
 tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_Configurator::getConfiguration() {
@@ -58,6 +100,7 @@ tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_C
     const auto status{ serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(Read_All_Configurations_Command.cbegin(), Read_All_Configurations_Command.cend())) };
 
     if (!status) {
+        restorePreviousValues();
         return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(status.error()));
     }
 
@@ -71,7 +114,7 @@ tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_C
 
     const auto& response{ message.value() };
 
-    if (response.size() != Expected_Configuration_Response_Size) {
+    if (response.size() != Expected_Read_Configuration_Response_Size) {
         return tl::make_unexpected(std::make_shared<AbnormalResponse>(response));
     }
 
@@ -130,17 +173,41 @@ void E22_400T37S_Configurator::setComponentsFromREG0(ModuleConfiguration &config
 
 void E22_400T37S_Configurator::setComponentsFromREG1(ModuleConfiguration &configuration, uint8_t REG1) {
     configuration.subpacketLenght = getSubpacketLenghFromREG1(REG1);
-    configuration.enableRSSI = getRSSINoiseFromREG1(REG1);
+    configuration.RSSIByte = getRSSINoiseFromREG1(REG1);
     configuration.enableAbnormalLog = getAbnormalLogEnabledFromREG1(REG1);
 }
 
 void E22_400T37S_Configurator::setComponentsFromREG3(ModuleConfiguration &configuration, uint8_t REG3) {
-    configuration.RSSIByte = getRSSIEnabledFromREG3(REG3);
+    configuration.enableRSSI = getRSSIEnabledFromREG3(REG3);
     configuration.enableFixedTransmitionMode = getTransmissionMethodFromREG3(REG3);
     configuration.enableRepeaterMode = getRelayFunctionREG3(REG3);
     configuration.enableLBT = getLBTEnabledFromREG3(REG3);
     configuration.enableWORMode = getWORModeFromREG3(REG3);
     configuration.worCycle = getWORCycleFromREG3(REG3);
+}
+
+void E22_400T37S_Configurator::setComponentsToREG0(uint8_t &REG0, const ModuleConfiguration &configuration) {
+    REG0 = 0;
+    REG0 |= static_cast<uint8_t>(configuration.uartBaudRate) << UART_Baud_Rate_Shift;
+    REG0 |= static_cast<uint8_t>(configuration.serialPortParityByte) << Parity_Byte_Shift;
+    REG0 |= static_cast<uint8_t>(configuration.airDataRate) & Air_Data_Rate_Mask;
+}
+
+void E22_400T37S_Configurator::setComponentsToREG1(uint8_t &REG1, const ModuleConfiguration &configuration) {
+    REG1 = 0;
+    REG1 |= static_cast<uint8_t>(configuration.subpacketLenght) << Subpacket_Length_Shift;
+    REG1 |= configuration.RSSIByte << RSSI_Byte_Shift;
+    REG1 |= configuration.enableAbnormalLog << Abnormal_Log_Shift;
+}
+
+void E22_400T37S_Configurator::setComponentsToREG3(uint8_t &REG3, const ModuleConfiguration &configuration) {
+    REG3 = 0;
+    REG3 |= configuration.enableRSSI << RSSI_Enabled_Shift;
+    REG3 |= configuration.enableFixedTransmitionMode << Transmission_Method_Shift;
+    REG3 |= configuration.enableRepeaterMode << Relay_Mode_Shift;
+    REG3 |= configuration.enableLBT << LBT_Enabled_Shift;
+    REG3 |= configuration.enableWORMode << WOR_Enabled_Shift;
+    REG3 |= static_cast<uint8_t>(configuration.worCycle) & WOR_Cycle_Mask;
 }
 
 UARTBaudRate E22_400T37S_Configurator::getBaudRateFromREG0(uint8_t REG0) {
@@ -168,7 +235,7 @@ SubpacketLenght E22_400T37S_Configurator::getSubpacketLenghFromREG1(uint8_t REG1
 }
 
 bool E22_400T37S_Configurator::getRSSINoiseFromREG1(uint8_t REG1) {
-    return (REG1 >> RSSI_Noise_Shift) & Single_Bit_Mask;
+    return (REG1 >> RSSI_Byte_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getAbnormalLogEnabledFromREG1(uint8_t REG1) {
@@ -184,7 +251,7 @@ bool E22_400T37S_Configurator::getTransmissionMethodFromREG3(uint8_t REG3) {
 }
 
 bool E22_400T37S_Configurator::getRelayFunctionREG3(uint8_t REG3) {
-    return (REG3 >> Relay_Function_Shift) & Single_Bit_Mask;
+    return (REG3 >> Relay_Mode_Shift) & Single_Bit_Mask;
 }
 
 bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) {
@@ -192,7 +259,7 @@ bool E22_400T37S_Configurator::getLBTEnabledFromREG3(uint8_t REG3) {
 }
 
 bool E22_400T37S_Configurator::getWORModeFromREG3(uint8_t REG3) {
-    return (REG3 >> WOR_Mode_Shift) & Single_Bit_Mask;
+    return (REG3 >> WOR_Enabled_Shift) & Single_Bit_Mask;
 }
 
 WORCycle E22_400T37S_Configurator::getWORCycleFromREG3(uint8_t REG3) {
