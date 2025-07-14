@@ -47,8 +47,6 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
 }
 
 tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::setConfiguration(const ModuleConfiguration& newConfiguration) {
-    // TODO: Pasos: 1- armar mensaje 2- enviar mensaje 3- verificar respuesta
-
     if (!isValidChannel(newConfiguration.Channel)) {
         return tl::make_unexpected(std::make_shared<AbnormalRegister>("Channel", newConfiguration.Channel));
     }
