@@ -6,6 +6,7 @@
 #include <vector>
 #include "EnvelopeDecoder.hpp"
 #include <array>
+#include "E22_400T37S_Configurator.hpp"
 
 /// @brief Firmware del dispositivo EasyLoRa
 class EasyLoRa_Firmware {
@@ -17,7 +18,7 @@ public:
     /// @param m0_Pin Pin a m0 del chip
     /// @param m1_Pin Pin a m1 del chip
     /// @param auxPin Pin a aux del chip
-    EasyLoRa_Firmware(SerialUSB& serialUSB, SerialUART& serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin);
+    EasyLoRa_Firmware(arduino::HardwareSerial& serialUSB, arduino::HardwareSerial& serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin);
 
     /// @brief Inicializa el dispositivo, debe ser llamado antes de cualquier otra función.
     void begin();
@@ -26,11 +27,20 @@ public:
     [[noreturn]]
     void start();
 
-private:
+    void setTimeout(uint16_t timeoutInMs);
 
-    SerialUSB& USBSerial_m;
-    SerialUART& LoRaUART_m;
+private:
+    E22_400T37S_Configurator configurator_m;
+    SerialParser serialToUSB_m;
     
+    Envelope receivedEnvelope_m;
+
+    uint16_t timeoutInMs_m{ 1000 };
+
+    [[nodiscard]]
+    bool tryReceiveEnvelope();
+
+    void applyConfigurationMessage();
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER
