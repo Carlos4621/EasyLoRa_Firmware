@@ -21,9 +21,13 @@ uint32_t SerialParser::getBaudRate() const {
 tl::expected<std::vector<uint8_t>, SerialParser::MessageSizeMissmatch> SerialParser::readMessage(uint8_t prefixLength) {
     std::vector<uint8_t> buffer(prefixLength + MessageLengthByteSize);
     
-    auto result{ tryReadBytes(buffer.begin(), buffer.size()) };
+    auto result{ tryReadBytes(buffer.begin(), buffer.size(), true) };
     if (!result) {
         return tl::make_unexpected(result.error());
+    }
+
+    if (!result.value()) {
+        return {};
     }
 
     const auto incomingMessageSize{ buffer[prefixLength] };
@@ -64,14 +68,18 @@ tl::expected<void, SerialParser::MessageSizeMissmatch> SerialParser::writeCrudeM
     return tryWriteBytes(message);
 }
 
-tl::expected<void, SerialParser::MessageSizeMissmatch> SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes) {
+tl::expected<bool, SerialParser::MessageSizeMissmatch> SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes, bool emptyReadIsValid) {
     const auto bytesRead{ USBSerial_m.readBytes(&*buffer, expectedBytes) };
 
+    if (emptyReadIsValid && bytesRead == 0) {
+        return false;
+    }
+    
     if (expectedBytes != bytesRead) {
         return tl::make_unexpected(MessageSizeMissmatch{expectedBytes, bytesRead, true});
     }
 
-    return {};
+    return true;
 }
 
 tl::expected<void, SerialParser::MessageSizeMissmatch> SerialParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {

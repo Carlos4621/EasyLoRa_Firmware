@@ -67,7 +67,7 @@ private:
     uint32_t baudRate_m;
 
     [[nodiscard]]
-    tl::expected<void, MessageSizeMissmatch> tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes);
+    tl::expected<bool, MessageSizeMissmatch> tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes, bool emptyReadIsValid = false);
     
     [[nodiscard]]
     tl::expected<void, MessageSizeMissmatch> tryWriteBytes(const std::vector<uint8_t>& buffer);
