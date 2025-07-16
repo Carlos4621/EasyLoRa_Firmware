@@ -8,6 +8,11 @@
 #include <array>
 #include "E22_400T37S_Configurator.hpp"
 
+/*
+    TODO: Solucionar los siguientes problemas
+    - Quitar todos los Serial.println(), son solo para debug temprano
+*/
+
 /// @brief Firmware del dispositivo EasyLoRa
 class EasyLoRa_Firmware {
 public:

@@ -21,14 +21,22 @@ void EasyLoRa_Firmware::start() {
             switch (receivedEnvelope_m.which_PosibleData) {
             case Envelope_dataToSend_tag:
                 // Simplemente enviar, si se requiere ACK se esperará x segundos, si no se recibe ACK se le informará al usuario
+                while(true) {
+                    Serial.println("datatosend package");
+                    delay(1000);
+                }
                 break;
 
             case Envelope_configuration_tag:
-                // Colocar configuración y reenviar al otro módulo, este siempre debe requerir ACK
+                applyConfigurationMessage();
                 break;
             
             default:
                 // No tiene sentido recibir un ACK o un error, simplemente se ignora o tal vez parpadear un led de error
+                  while(true){
+                    Serial.println("Uknow package");
+                    delay(1000);
+                }
                 break;
             }
         }
@@ -36,21 +44,25 @@ void EasyLoRa_Firmware::start() {
 }
 
 bool EasyLoRa_Firmware::tryReceiveEnvelope() {
-    const auto envelope{ serialToUSB_m.readMessage() };
+    auto envelope{ serialToUSB_m.readMessage() };
 
     if (!envelope) {
         // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
+        Serial.println(envelope.error().what());
         return false;
     }
     
     if (envelope.value().empty()) {
         return false;
     }
-    
+
+    envelope.value().erase(envelope.value().begin());
+
     const auto decodeStatus{ EnvelopeDecoder::decode(envelope.value()) };
 
     if (!decodeStatus) {
         // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
+        Serial.println(decodeStatus.error().what());
         return false;
     }
 
@@ -65,12 +77,13 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
 
     if (!setConfigurationStatus) {
         // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
-        Serial.println("ERROR");
-        while(true) {
-            delay(10000);
-        }
+        
+        Serial.println(setConfigurationStatus.error()->what());
+
         return;
     }
+
+    Serial.println("Success");
 
     // Reenviar el mensaje de configuración al otro módulo
     
