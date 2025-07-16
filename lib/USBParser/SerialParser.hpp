@@ -66,6 +66,13 @@ private:
     arduino::HardwareSerial& USBSerial_m;
     uint32_t baudRate_m;
 
+    /// @brief Intenta leer un mensaje del puerto serial
+    /// @param buffer iterador a buffer en donde se escribirán los datos
+    /// @param expectedBytes bytes esperados
+    /// @param emptyReadIsValid Permite devolver false en caso de no haber leído ningún dato en vez de lanzar MessageSizeMissmatch
+    /// @return tl::expected con true si se han leídos los expectedBytes.
+    /// false si (emptyReadIsValid && bytesLeidos == 0).
+    /// MessageSizeMissmatch si (!emptyReadIsValid && bytesLeídos != expectedBytes)
     [[nodiscard]]
     tl::expected<bool, MessageSizeMissmatch> tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes, bool emptyReadIsValid = false);
     

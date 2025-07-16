@@ -48,8 +48,8 @@ tl::expected<void, SerialParser::MessageSizeMissmatch> SerialParser::writeMessag
 
     std::vector<uint8_t> buffer;
     buffer.reserve(prefix.size() + MessageLengthByteSize + message.size());
-    buffer.insert(buffer.cbegin(), prefix.cbegin(), prefix.cend());
-    buffer.push_back(message.size());
+    buffer.insert(buffer.cend(), prefix.cbegin(), prefix.cend());
+    buffer.push_back(static_cast<uint8_t>(message.size()));
     buffer.insert(buffer.cend(), message.cbegin(), message.cend());
 
     const auto result{ tryWriteBytes(buffer) };
