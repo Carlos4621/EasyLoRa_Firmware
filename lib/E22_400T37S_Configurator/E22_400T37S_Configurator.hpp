@@ -51,9 +51,7 @@ public:
     /// @param auxPin Pin a aux
     E22_400T37S_Configurator(arduino::HardwareSerial& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin);
 
-    /// @brief Inicializa los pines necesarios, llamar antes de cualquier otra función
-    /// @note Esto NO inicializa el puerto serial debido a que la clase no lo usa necesariamente, esto no es problema ya que cuando se cambia la configuración se establece al
-    /// baud rate necesario
+    /// @brief Inicializa los pines necesarios y el puero serial, llamar antes de cualquier otra función
     void begin();
 
     /// @brief Cambia al modo deseado

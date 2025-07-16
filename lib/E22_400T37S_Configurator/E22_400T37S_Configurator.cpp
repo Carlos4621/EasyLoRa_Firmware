@@ -12,6 +12,7 @@ void E22_400T37S_Configurator::begin() {
     m0_pin_m.begin();
     m1_pin_m.begin();
     auxPin_m.begin();
+    serialToLoRa_m.begin();
 }
 
 void E22_400T37S_Configurator::setMode(Modes modeToSet) {
