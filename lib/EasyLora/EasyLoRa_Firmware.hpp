@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <SerialUSB.h>
 #include <vector>
-#include "EnvelopeDecoder.hpp"
+#include "MessageDecoder.hpp"
 #include <array>
 #include "E22_400T37S_Configurator.hpp"
 
@@ -46,6 +46,8 @@ private:
     bool tryReceiveEnvelope();
 
     void applyConfigurationMessage();
+
+    void sendError(std::string_view errorMessage);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER

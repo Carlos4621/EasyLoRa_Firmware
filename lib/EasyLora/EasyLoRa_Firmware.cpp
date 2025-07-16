@@ -58,7 +58,7 @@ bool EasyLoRa_Firmware::tryReceiveEnvelope() {
 
     envelope.value().erase(envelope.value().begin());
 
-    const auto decodeStatus{ EnvelopeDecoder::decode(envelope.value()) };
+    const auto decodeStatus{ MessageDecoder<Envelope>::decode(envelope.value()) };
 
     if (!decodeStatus) {
         // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
@@ -87,4 +87,8 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
 
     // Reenviar el mensaje de configuración al otro módulo
     
+}
+
+void EasyLoRa_Firmware::sendError(std::string_view errorMessage) {
+
 }
