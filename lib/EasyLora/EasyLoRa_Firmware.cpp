@@ -2,7 +2,8 @@
 
 EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial &serialUSB, arduino::HardwareSerial &serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin)
 : configurator_m{ serialToLoRa, m0_Pin, m1_Pin, auxPin },
-  serialToUSB_m{ serialUSB }
+  serialToUSB_m{ serialUSB },
+  responseSender_m{ serialToUSB_m }
 {
 }
 
@@ -76,19 +77,18 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
     const auto setConfigurationStatus{ configurator_m.setConfiguration(newConfiguration) };
 
     if (!setConfigurationStatus) {
-        // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
-        
-        Serial.println(setConfigurationStatus.error()->what());
-
+        const auto errorSent{ responseSender_m.sendError(setConfigurationStatus.error()->what()) };
+        if (!errorSent) {
+            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+        }
         return;
     }
 
-    Serial.println("Success");
+    const bool successSent{ responseSender_m.sendSuccess() };
+    if (!successSent) {
+        // TODO: Manejar el caso donde no se pudo enviar el mensaje de éxito (ej: encender LED de error)
+    }
 
-    // Reenviar el mensaje de configuración al otro módulo
+    // TODO: Reenviar el mensaje de configuración al otro módulo
     
-}
-
-void EasyLoRa_Firmware::sendError(std::string_view errorMessage) {
-
 }

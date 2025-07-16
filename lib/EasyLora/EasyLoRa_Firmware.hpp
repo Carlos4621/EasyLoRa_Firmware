@@ -4,9 +4,12 @@
 #include <Arduino.h>
 #include <SerialUSB.h>
 #include <vector>
+#include <pb_encode.h>
 #include "MessageDecoder.hpp"
 #include <array>
 #include "E22_400T37S_Configurator.hpp"
+#include "MessageEncoder.hpp"
+#include "ResponseSender.hpp"
 
 /*
     TODO: Solucionar los siguientes problemas
@@ -35,8 +38,10 @@ public:
     void setTimeout(uint16_t timeoutInMs);
 
 private:
+
     E22_400T37S_Configurator configurator_m;
     SerialParser serialToUSB_m;
+    ResponseSender responseSender_m;
     
     Envelope receivedEnvelope_m;
 
@@ -46,8 +51,6 @@ private:
     bool tryReceiveEnvelope();
 
     void applyConfigurationMessage();
-
-    void sendError(std::string_view errorMessage);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER

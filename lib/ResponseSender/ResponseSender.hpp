@@ -1,0 +1,51 @@
+#ifndef RESPONSE_SENDER_HEADER
+#define RESPONSE_SENDER_HEADER
+
+#include <string>
+#include "SerialParser.hpp"
+#include "MessageEncoder.hpp"
+#include "SuccessStatus.pb.h"
+#include <tl/expected.hpp>
+
+/// @brief Clase responsable del envío de respuestas de éxito y error por puerto serial
+class ResponseSender {
+public:
+    /// @brief Constructor
+    /// @param serialParser Referencia al parser serial para envío de mensajes
+    explicit ResponseSender(SerialParser& serialParser);
+
+    /// @brief Envía un mensaje de éxito
+    /// @param successMessage Mensaje de éxito a enviar (por defecto "OK")
+    /// @return true si el envío fue exitoso, false en caso contrario
+    [[nodiscard]]
+    bool sendSuccess(const std::string& successMessage = "OK");
+
+    /// @brief Envía un mensaje de error
+    /// @param errorMessage Mensaje de error a enviar
+    /// @return true si el envío fue exitoso, false en caso contrario
+    [[nodiscard]]
+    bool sendError(const std::string& errorMessage);
+
+private:
+    SerialParser& serialParser_m;
+
+    /// @brief Crea y configura un mensaje SuccessStatus para datos
+    /// @param message Mensaje a incluir
+    /// @return SuccessStatus configurado
+    [[nodiscard]]
+    SuccessStatus createSuccessMessage(const std::string& message);
+
+    /// @brief Crea y configura un mensaje SuccessStatus para errores
+    /// @param errorMessage Mensaje de error a incluir
+    /// @return SuccessStatus configurado
+    [[nodiscard]]
+    SuccessStatus createErrorMessage(const std::string& errorMessage);
+
+    /// @brief Codifica y envía un mensaje SuccessStatus
+    /// @param message Mensaje a enviar
+    /// @return true si el envío fue exitoso, false en caso contrario
+    [[nodiscard]]
+    bool encodeAndSend(const SuccessStatus& message);
+};
+
+#endif // !RESPONSE_SENDER_HEADER

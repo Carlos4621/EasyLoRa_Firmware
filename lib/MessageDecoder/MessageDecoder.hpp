@@ -9,24 +9,7 @@
 #include <vector>
 #include <tl/expected.hpp>
 #include <memory>
-
-/// @brief Traits para tipos de mensajes Protocol Buffers
-template<typename T>
-struct MessageTraits;
-
-/// @brief Especialización para Envelope
-template<>
-struct MessageTraits<Envelope> {
-    static constexpr Envelope init_zero = Envelope_init_zero;
-    static constexpr auto fields = Envelope_fields;
-};
-
-/// @brief Especialización para SuccessStatus
-template<>
-struct MessageTraits<SuccessStatus> {
-    static constexpr SuccessStatus init_zero = SuccessStatus_init_zero;
-    static constexpr auto fields = SuccessStatus_fields;
-};
+#include "MessageTraits.hpp"
 
 /// @brief Decodificador genérico de mensajes Protocol Buffers
 template<typename MessageType>
