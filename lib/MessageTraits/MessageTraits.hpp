@@ -25,4 +25,12 @@ struct MessageTraits<SuccessStatus> {
     static constexpr size_t max_size = SuccessStatus_size;
 };
 
+/// @brief Especialización para ModuleConfiguration
+template<>
+struct MessageTraits<ModuleConfiguration> {
+    static constexpr ModuleConfiguration init_zero = ModuleConfiguration_init_zero;
+    static constexpr auto fields = ModuleConfiguration_fields;
+    static constexpr size_t max_size = ModuleConfiguration_size;
+};
+
 #endif // !MESSAGE_TRAITS_HPP
