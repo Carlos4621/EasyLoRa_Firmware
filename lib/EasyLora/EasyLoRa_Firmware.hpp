@@ -51,6 +51,7 @@ private:
     bool tryReceiveEnvelope();
 
     void applyConfigurationMessage();
+    void sendConfigurationToAPI();
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER

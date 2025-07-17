@@ -22,22 +22,20 @@ void EasyLoRa_Firmware::start() {
             switch (receivedEnvelope_m.which_PosibleData) {
             case Envelope_dataToSend_tag:
                 // Simplemente enviar, si se requiere ACK se esperará x segundos, si no se recibe ACK se le informará al usuario
-                while(true) {
-                    Serial.println("datatosend package");
-                    delay(1000);
-                }
+                Serial.println("Uknow package");
                 break;
 
             case Envelope_configuration_tag:
                 applyConfigurationMessage();
                 break;
             
+            case Envelope_requestConfiguration_tag:
+                sendConfigurationToAPI();
+                break;
+
             default:
                 // No tiene sentido recibir un ACK o un error, simplemente se ignora o tal vez parpadear un led de error
-                  while(true){
-                    Serial.println("Uknow package");
-                    delay(1000);
-                }
+                Serial.println("Uknow package");
                 break;
             }
         }
@@ -91,4 +89,32 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
 
     // TODO: Reenviar el mensaje de configuración al otro módulo
     
+}
+
+void EasyLoRa_Firmware::sendConfigurationToAPI() {
+    const auto getConfigurationStatus{ configurator_m.getConfiguration() };
+    if (!getConfigurationStatus) {
+        const auto errorSent{ responseSender_m.sendError(getConfigurationStatus.error()->what()) };
+        if (!errorSent) {
+            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+        }
+        return;
+    }
+
+    const auto serializeConfigurationStatus{ MessageEncoder<ModuleConfiguration>::encode(getConfigurationStatus.value()) };
+
+    if (!serializeConfigurationStatus) {
+        const auto errorSent{ responseSender_m.sendError(serializeConfigurationStatus.error().what()) };
+        if (!errorSent) {
+            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+        }
+        return;
+    }
+    
+    const auto& toSend{ serializeConfigurationStatus.value() };
+    const auto succesSentSatus{ responseSender_m.sendSuccess(toSend) };
+    if (!succesSentSatus) {
+        // TODO: Led de error
+    }
+
 }
