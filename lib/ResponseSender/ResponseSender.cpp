@@ -6,17 +6,17 @@ ResponseSender::ResponseSender(SerialParser& serialParser)
 }
 
 bool ResponseSender::sendSuccess(const std::string& successMessage) {
-    const auto message = createSuccessMessage(successMessage);
+    const auto message{ createSuccessMessage(successMessage) };
     return encodeAndSend(message);
 }
 
 bool ResponseSender::sendSuccess(const std::vector<uint8_t>& data) {
-    const auto message = createSuccessMessage(data);
+    const auto message{ createSuccessMessage(data) };
     return encodeAndSend(message);
 }
 
 bool ResponseSender::sendError(const std::string& errorMessage) {
-    const auto message = createErrorMessage(errorMessage);
+    const auto message{ createErrorMessage(errorMessage) };
     return encodeAndSend(message);
 }
 
@@ -66,7 +66,7 @@ bool ResponseSender::encodeAndSend(const SuccessStatus& message) {
         return false;
     }
     
-    const auto writeStatus = serialParser_m.writeCrudeMessage(encodeStatus.value());
+    const auto writeStatus{ serialParser_m.writeMessage(encodeStatus.value()) };
     if (!writeStatus) {
         // Log del error de envío - no podemos usar sendError aquí para evitar recursión
         return false;
