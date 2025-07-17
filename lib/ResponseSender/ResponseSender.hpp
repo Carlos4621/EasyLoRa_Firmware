@@ -2,6 +2,7 @@
 #define RESPONSE_SENDER_HEADER
 
 #include <string>
+#include <vector>
 #include "SerialParser.hpp"
 #include "MessageEncoder.hpp"
 #include "SuccessStatus.pb.h"
@@ -20,6 +21,12 @@ public:
     [[nodiscard]]
     bool sendSuccess(const std::string& successMessage = "OK");
 
+    /// @brief Envía un mensaje de éxito con datos binarios
+    /// @param data Datos binarios a enviar
+    /// @return true si el envío fue exitoso, false en caso contrario
+    [[nodiscard]]
+    bool sendSuccess(const std::vector<uint8_t>& data);
+
     /// @brief Envía un mensaje de error
     /// @param errorMessage Mensaje de error a enviar
     /// @return true si el envío fue exitoso, false en caso contrario
@@ -34,6 +41,12 @@ private:
     /// @return SuccessStatus configurado
     [[nodiscard]]
     SuccessStatus createSuccessMessage(const std::string& message);
+
+    /// @brief Crea y configura un mensaje SuccessStatus para datos binarios
+    /// @param data Datos binarios a incluir
+    /// @return SuccessStatus configurado
+    [[nodiscard]]
+    SuccessStatus createSuccessMessage(const std::vector<uint8_t>& data);
 
     /// @brief Crea y configura un mensaje SuccessStatus para errores
     /// @param errorMessage Mensaje de error a incluir

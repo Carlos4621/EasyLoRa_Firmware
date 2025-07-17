@@ -10,6 +10,11 @@ bool ResponseSender::sendSuccess(const std::string& successMessage) {
     return encodeAndSend(message);
 }
 
+bool ResponseSender::sendSuccess(const std::vector<uint8_t>& data) {
+    const auto message = createSuccessMessage(data);
+    return encodeAndSend(message);
+}
+
 bool ResponseSender::sendError(const std::string& errorMessage) {
     const auto message = createErrorMessage(errorMessage);
     return encodeAndSend(message);
@@ -19,11 +24,24 @@ SuccessStatus ResponseSender::createSuccessMessage(const std::string& message) {
     SuccessStatus toSend = SuccessStatus_init_zero;
     toSend.which_PossibleData = SuccessStatus_data_tag;
 
-    const auto maxSize{ sizeof(toSend.PossibleData.data) - 1 }; // -1 para null terminator
+    const auto maxSize{ sizeof(toSend.PossibleData.data.bytes) };
     const auto copySize{ std::min(message.length(), maxSize) };
+
+    std::memcpy(toSend.PossibleData.data.bytes, message.c_str(), copySize);
+    toSend.PossibleData.data.size = copySize;
     
-    strncpy(toSend.PossibleData.data, message.c_str(), copySize);
-    toSend.PossibleData.data[copySize] = '\0';
+    return toSend;
+}
+
+SuccessStatus ResponseSender::createSuccessMessage(const std::vector<uint8_t>& data) {
+    SuccessStatus toSend = SuccessStatus_init_zero;
+    toSend.which_PossibleData = SuccessStatus_data_tag;
+
+    const auto maxSize{ sizeof(toSend.PossibleData.data.bytes) };
+    const auto copySize{ std::min(data.size(), maxSize) };
+
+    std::memcpy(toSend.PossibleData.data.bytes, data.data(), copySize);
+    toSend.PossibleData.data.size = copySize;
     
     return toSend;
 }
@@ -32,11 +50,11 @@ SuccessStatus ResponseSender::createErrorMessage(const std::string& errorMessage
     SuccessStatus toSend = SuccessStatus_init_zero;
     toSend.which_PossibleData = SuccessStatus_error_tag;
     
-    const auto maxSize{ sizeof(toSend.PossibleData.error) - 1 }; // -1 para null terminator
+    const auto maxSize{ sizeof(toSend.PossibleData.error.bytes) };
     const auto copySize{ std::min(errorMessage.length(), maxSize) };
     
-    strncpy(toSend.PossibleData.error, errorMessage.c_str(), copySize);
-    toSend.PossibleData.error[copySize] = '\0';
+    std::memcpy(toSend.PossibleData.error.bytes, errorMessage.c_str(), copySize);
+    toSend.PossibleData.error.size = copySize;
     
     return toSend;
 }
