@@ -1,25 +1,28 @@
 #include "EasyLoRa_Firmware.hpp"
 
 EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial &serialUSB, arduino::HardwareSerial &serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin)
-: configurator_m{ serialToLoRa, m0_Pin, m1_Pin, auxPin },
-  serialToUSB_m{ serialUSB },
-  responseSender_m{ serialToUSB_m }
+:   serialToLoRa_m{ serialToLoRa },
+    configurator_m{ serialToLoRa, m0_Pin, m1_Pin, auxPin },
+    serialToUSB_m{ serialUSB },
+    responseSender_m{ serialToUSB_m }
 {
 }
 
 void EasyLoRa_Firmware::begin() {
+    serialToLoRa_m.begin();
     configurator_m.begin();
     serialToUSB_m.begin();
 }
 
 void EasyLoRa_Firmware::start() {
     configurator_m.setMode(E22_400T37S_Configurator::Modes::Transparent);
+    syncBaudRateWithModule();
 
     while (true) {
         const auto envelopeReceived{ tryReceiveEnvelope() };
 
         if (envelopeReceived) {
-            switch (receivedEnvelope_m.which_PosibleData) {
+            switch (received_API_Envelope_m.which_PosibleData) {
             case Envelope_dataToSend_tag:
                 // Simplemente enviar, si se requiere ACK se esperará x segundos, si no se recibe ACK se le informará al usuario
                 Serial.println("Uknow package");
@@ -46,8 +49,7 @@ bool EasyLoRa_Firmware::tryReceiveEnvelope() {
     auto envelope{ serialToUSB_m.readMessage() };
 
     if (!envelope) {
-        // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
-        Serial.println(envelope.error().what());
+        // TODO: Hacer que se encienda un led de error
         return false;
     }
     
@@ -60,17 +62,16 @@ bool EasyLoRa_Firmware::tryReceiveEnvelope() {
     const auto decodeStatus{ MessageDecoder<Envelope>::decode(envelope.value()) };
 
     if (!decodeStatus) {
-        // TODO: Hacer que el error sea comunicado al usuario mediante un mensaje enviado por el puerto serial o hacer que se encienda un led de error
-        Serial.println(decodeStatus.error().what());
+        // TODO: Hacer que se encienda un led de error
         return false;
     }
 
-    receivedEnvelope_m = decodeStatus.value();
+    received_API_Envelope_m = decodeStatus.value();
     return true;
 }
 
 void EasyLoRa_Firmware::applyConfigurationMessage() {
-    const auto& newConfiguration{ receivedEnvelope_m.PosibleData.configuration };
+    const auto& newConfiguration{ received_API_Envelope_m.PosibleData.configuration };
 
     const auto setConfigurationStatus{ configurator_m.setConfiguration(newConfiguration) };
 
@@ -87,8 +88,8 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
         // TODO: Manejar el caso donde no se pudo enviar el mensaje de éxito (ej: encender LED de error)
     }
 
+    serialToLoRa_m.setBaudRate(toValueBaudRate(newConfiguration.uartBaudRate));
     // TODO: Reenviar el mensaje de configuración al otro módulo
-    
 }
 
 void EasyLoRa_Firmware::sendConfigurationToAPI() {
@@ -117,4 +118,47 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
         // TODO: Led de error
     }
 
+}
+
+void EasyLoRa_Firmware::syncBaudRateWithModule() {
+    const auto getConfigurationStatus{ configurator_m.getConfiguration() };
+    if (!getConfigurationStatus) {
+        const auto errorSent{ responseSender_m.sendError(getConfigurationStatus.error()->what()) };
+        if (!errorSent) {
+            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+        }
+        return;
+    }
+
+    serialToLoRa_m.setBaudRate(toValueBaudRate(getConfigurationStatus.value().uartBaudRate));
+}
+
+uint32_t EasyLoRa_Firmware::toValueBaudRate(UARTBaudRate enumedBaudRate) {
+    switch (enumedBaudRate) {
+    case UARTBaudRate_UART_1200_BPS:
+        return 1200;
+    
+    case UARTBaudRate_UART_2400_BPS:
+        return 2400;
+
+    case UARTBaudRate_UART_4800_BPS:
+        return 4800;
+    
+    case UARTBaudRate_UART_9600_BPS:
+        return 9600;
+
+    case UARTBaudRate_UART_19200_BPS:
+        return 19200;
+
+    case UARTBaudRate_UART_38400_BPS:
+        return 38400;
+
+    case UARTBaudRate_UART_57600_BPS:
+        return 57600;
+
+    case UARTBaudRate_UART_115200_BPS:
+        return 115200;
+    }
+
+    return 0;
 }
