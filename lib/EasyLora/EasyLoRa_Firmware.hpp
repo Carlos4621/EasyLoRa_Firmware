@@ -39,11 +39,13 @@ public:
 
 private:
 
+    SerialParser serialToLoRa_m;
     E22_400T37S_Configurator configurator_m;
     SerialParser serialToUSB_m;
     ResponseSender responseSender_m;
     
-    Envelope receivedEnvelope_m;
+    Envelope received_API_Envelope_m;
+    Envelope received_LoRa_Envelope_m;
 
     uint16_t timeoutInMs_m{ 1000 };
 
@@ -52,6 +54,10 @@ private:
 
     void applyConfigurationMessage();
     void sendConfigurationToAPI();
+    void syncBaudRateWithModule();
+
+    [[nodiscard]]
+    static uint32_t toValueBaudRate(UARTBaudRate enumedBaudRate);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER
