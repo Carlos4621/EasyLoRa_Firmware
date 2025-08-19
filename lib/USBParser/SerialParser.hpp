@@ -61,7 +61,7 @@ public:
 
 private:
 
-    static constexpr uint8_t MessageLengthByteSize{ 1 };
+    static constexpr uint8_t Message_Length_Byte_Size{ 1 };
 
     arduino::HardwareSerial& USBSerial_m;
     uint32_t baudRate_m;

@@ -39,9 +39,9 @@ MessageEncoder<MessageType>::encode(const MessageType& message) {
 
     std::vector<uint8_t> encodedData(MessageTraits<MessageType>::max_size);
 
-    pb_ostream_t encodeStream = pb_ostream_from_buffer(encodedData.data(), encodedData.size());
+    pb_ostream_t encodeStream{ pb_ostream_from_buffer(encodedData.data(), encodedData.size()) };
 
-    const auto encodeStatus = pb_encode(&encodeStream, MessageTraits<MessageType>::fields, &message);
+    const auto encodeStatus{ pb_encode(&encodeStream, MessageTraits<MessageType>::fields, &message) };
     
     if (!encodeStatus) {
         return tl::make_unexpected(EncodificationError{});

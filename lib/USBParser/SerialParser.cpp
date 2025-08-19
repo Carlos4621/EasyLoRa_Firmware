@@ -19,7 +19,7 @@ uint32_t SerialParser::getBaudRate() const {
 }
 
 tl::expected<std::vector<uint8_t>, SerialParser::MessageSizeMissmatch> SerialParser::readMessage(uint8_t prefixLength) {
-    std::vector<uint8_t> buffer(prefixLength + MessageLengthByteSize);
+    std::vector<uint8_t> buffer(prefixLength + Message_Length_Byte_Size);
     
     auto result{ tryReadBytes(buffer.begin(), buffer.size(), true) };
     if (!result) {
@@ -31,9 +31,9 @@ tl::expected<std::vector<uint8_t>, SerialParser::MessageSizeMissmatch> SerialPar
     }
 
     const auto incomingMessageSize{ buffer[prefixLength] };
-    buffer.resize(prefixLength + MessageLengthByteSize + incomingMessageSize);
+    buffer.resize(prefixLength + Message_Length_Byte_Size + incomingMessageSize);
     
-    result = tryReadBytes(buffer.begin() + prefixLength + MessageLengthByteSize, incomingMessageSize);
+    result = tryReadBytes(buffer.begin() + prefixLength + Message_Length_Byte_Size, incomingMessageSize);
     if (!result) {
         return tl::make_unexpected(result.error());
     }
@@ -47,7 +47,7 @@ tl::expected<void, SerialParser::MessageSizeMissmatch> SerialParser::writeMessag
     }
 
     std::vector<uint8_t> buffer;
-    buffer.reserve(prefix.size() + MessageLengthByteSize + message.size());
+    buffer.reserve(prefix.size() + Message_Length_Byte_Size + message.size());
     buffer.insert(buffer.cend(), prefix.cbegin(), prefix.cend());
     buffer.push_back(static_cast<uint8_t>(message.size()));
     buffer.insert(buffer.cend(), message.cbegin(), message.cend());

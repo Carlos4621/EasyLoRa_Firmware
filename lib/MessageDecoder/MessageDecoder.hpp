@@ -36,9 +36,9 @@ public:
 template<typename MessageType>
 tl::expected<MessageType, typename MessageDecoder<MessageType>::DecodificationError> 
 MessageDecoder<MessageType>::decode(const std::vector<uint8_t>& encodedData) {
-    MessageType decodedData = MessageTraits<MessageType>::init_zero;
+    MessageType decodedData{ MessageTraits<MessageType>::init_zero };
 
-    pb_istream_t decodeStream = pb_istream_from_buffer(encodedData.data(), encodedData.size());
+    pb_istream_t decodeStream{ pb_istream_from_buffer(encodedData.data(), encodedData.size()) };
 
     const auto decodeStatus{ pb_decode(&decodeStream, MessageTraits<MessageType>::fields, &decodedData) };
 

@@ -72,5 +72,6 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "expected": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/carlos4621/EasyLoRa_Firmware/lib/expected"
 }

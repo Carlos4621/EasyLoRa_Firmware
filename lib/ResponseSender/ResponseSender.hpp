@@ -1,7 +1,7 @@
 #ifndef RESPONSE_SENDER_HEADER
 #define RESPONSE_SENDER_HEADER
 
-#include <string>
+#include <string_view>
 #include <vector>
 #include "SerialParser.hpp"
 #include "MessageEncoder.hpp"
@@ -15,12 +15,6 @@ public:
     /// @param serialParser Referencia al parser serial para envío de mensajes
     explicit ResponseSender(SerialParser& serialParser);
 
-    /// @brief Envía un mensaje de éxito
-    /// @param successMessage Mensaje de éxito a enviar (por defecto "OK")
-    /// @return true si el envío fue exitoso, false en caso contrario
-    [[nodiscard]]
-    bool sendSuccess(const std::string& successMessage = "OK");
-
     /// @brief Envía un mensaje de éxito con datos binarios
     /// @param data Datos binarios a enviar
     /// @return true si el envío fue exitoso, false en caso contrario
@@ -31,16 +25,10 @@ public:
     /// @param errorMessage Mensaje de error a enviar
     /// @return true si el envío fue exitoso, false en caso contrario
     [[nodiscard]]
-    bool sendError(const std::string& errorMessage);
+    bool sendError(std::string_view errorMessage);
 
 private:
     SerialParser& serialParser_m;
-
-    /// @brief Crea y configura un mensaje SuccessStatus para datos
-    /// @param message Mensaje a incluir
-    /// @return SuccessStatus configurado
-    [[nodiscard]]
-    SuccessStatus createSuccessMessage(const std::string& message);
 
     /// @brief Crea y configura un mensaje SuccessStatus para datos binarios
     /// @param data Datos binarios a incluir
@@ -52,7 +40,7 @@ private:
     /// @param errorMessage Mensaje de error a incluir
     /// @return SuccessStatus configurado
     [[nodiscard]]
-    SuccessStatus createErrorMessage(const std::string& errorMessage);
+    SuccessStatus createErrorMessage(std::string_view errorMessage);
 
     /// @brief Codifica y envía un mensaje SuccessStatus
     /// @param message Mensaje a enviar
