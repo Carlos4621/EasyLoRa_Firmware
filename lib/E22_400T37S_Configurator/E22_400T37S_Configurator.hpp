@@ -130,7 +130,7 @@ private:
     Modes currentMode_m{ Modes::Transparent };
 
     Modes previousMode_m{ Modes::Transparent };
-    uint64_t previousBaudRate_m{ 0 };
+    uint64_t previousBaudRate_m{ 9600 };
 
     void setTransparentMode();
     void setWORMode();

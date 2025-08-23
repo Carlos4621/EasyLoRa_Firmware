@@ -49,8 +49,8 @@ private:
     Envelope received_API_Envelope_m;
     Envelope received_LoRa_Envelope_m;
 
-    std::vector<uint8_t> received_API_CrudeData_m;
-    std::vector<uint8_t> received_LoRa_CrudeData_m;
+    std::vector<uint8_t> received_API_SerializedData_m;
+    std::vector<uint8_t> received_LoRa_SerializedData_m;
 
     uint16_t timeoutInMs_m{ 1000 };
 

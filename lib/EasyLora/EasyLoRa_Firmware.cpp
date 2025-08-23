@@ -16,6 +16,7 @@ void EasyLoRa_Firmware::begin() {
 
 void EasyLoRa_Firmware::start() {
     configurator_m.setMode(E22_400T37S_Configurator::Modes::Transparent);
+    syncBaudRateWithModule();
     
     while (true) {
         const auto API_EnvelopeReceived{ tryReceive_API_Envelope() };
@@ -31,11 +32,11 @@ void EasyLoRa_Firmware::start() {
 }
 
 bool EasyLoRa_Firmware::tryReceive_API_Envelope() {
-    return tryReceiveEnvelopeFromSerial(serialToAPI_m, received_API_Envelope_m, received_API_CrudeData_m);
+    return tryReceiveEnvelopeFromSerial(serialToAPI_m, received_API_Envelope_m, received_API_SerializedData_m);
 }
 
 bool EasyLoRa_Firmware::tryReceive_LoRa_Envelope() {
-    return tryReceiveEnvelopeFromSerial(serialToLoRa_m, received_LoRa_Envelope_m, received_LoRa_CrudeData_m);
+    return tryReceiveEnvelopeFromSerial(serialToLoRa_m, received_LoRa_Envelope_m, received_LoRa_SerializedData_m);
 }
 
 void EasyLoRa_Firmware::applyConfigurationMessage() {
@@ -46,14 +47,14 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
     if (!setConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(setConfigurationStatus.error()->what()) };
         if (!errorSent) {
-            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+            // TODO: UnableToSetConfiguration
         }
         return;
     }
 
     const bool successSent{ responseSender_m.sendSuccess({}) };
     if (!successSent) {
-        // TODO: Manejar el caso donde no se pudo enviar el mensaje de éxito (ej: encender LED de error)
+        // TODO: UnableToSendSucces
     }
 
     serialToLoRa_m.setBaudRate(toValueBaudRate(newConfiguration.uartBaudRate));
@@ -65,7 +66,7 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
     if (!getConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(getConfigurationStatus.error()->what()) };
         if (!errorSent) {
-            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+            // TODO: CantSendConfiguration
         }
         return;
     }
@@ -75,7 +76,7 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
     if (!serializeConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(serializeConfigurationStatus.error().what()) };
         if (!errorSent) {
-            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+            // TODO: CantSerializeConfiguration
         }
         return;
     }
@@ -86,17 +87,28 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
 void EasyLoRa_Firmware::sendToAPI(const std::vector<uint8_t> &dataToSend) {
     const auto succesSentSatus{ responseSender_m.sendSuccess(dataToSend) };
     if (!succesSentSatus) {
-        // TODO: Led de error
+        // TODO: CantSendSuccess
     }
 }
 
 void EasyLoRa_Firmware::sendReceivedDataToAPI() {
-    sendToAPI(received_LoRa_CrudeData_m);
+    sendToAPI(received_LoRa_SerializedData_m);
 }
 
 // TODO: Tal vez asegurar que esté en modo transparente?
 void EasyLoRa_Firmware::sendReceivedDataToLoRa() {
-    serialToLoRa_m.writeMessage(received_API_CrudeData_m);
+    configurator_m.setMode(E22_400T37S_Configurator::Modes::Transparent);
+
+    const auto sendStatus{ serialToLoRa_m.writeMessage(received_API_SerializedData_m) };
+    if (!sendStatus) {
+        const auto errorSent{ responseSender_m.sendError(sendStatus.error().what()) };
+        if (!errorSent) {
+            // TODO: CantSendLoRaMessage
+        }
+        return;
+    }
+
+    //TODO: Implementar recibimiento de ACK
 }
 
 void EasyLoRa_Firmware::syncBaudRateWithModule() {
@@ -104,7 +116,7 @@ void EasyLoRa_Firmware::syncBaudRateWithModule() {
     if (!getConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(getConfigurationStatus.error()->what()) };
         if (!errorSent) {
-            // TODO: Manejar el caso donde no se pudo enviar el error (ej: encender LED de error)
+            // TODO: CantGetConfiguration
         }
         return;
     }
@@ -158,7 +170,7 @@ void EasyLoRa_Firmware::manageAPIEnvelope() {
         break;
 
     default:
-        // No tiene sentido recibir un ACK o un error, simplemente se ignora o tal vez parpadear un led de error
+        // TODO: No tiene sentido recibir un ACK o un error, simplemente se ignora o tal vez parpadear un led de error
         Serial.println("Uknow package");
         break;
     }
@@ -175,7 +187,7 @@ void EasyLoRa_Firmware::manageLoRaEnvelope() {
         break;
 
     case Envelope_requestConfiguration_tag:
-        // Solicitan información, mandar en moto dataToSend
+        // Solicitan información, mandar en modo dataToSend
         break;
     
     default:
