@@ -4,7 +4,8 @@ EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial &serialUSB, arduino
 :   serialToLoRa_m{ serialToLoRa },
     configurator_m{ serialToLoRa, m0_Pin, m1_Pin, auxPin },
     serialToAPI_m{ serialUSB },
-    responseSender_m{ serialToAPI_m }
+    responseSender_m{ serialToAPI_m },
+    auxPin_m{ auxPin }
 {
 }
 
@@ -12,11 +13,14 @@ void EasyLoRa_Firmware::begin() {
     serialToLoRa_m.begin();
     configurator_m.begin();
     serialToAPI_m.begin();
+    statusLED_m.begin();
 }
 
 void EasyLoRa_Firmware::start() {
     configurator_m.setMode(E22_400T37S_Configurator::Modes::Transparent);
     syncBaudRateWithModule();
+
+    statusLED_m.setStatus(EasyLoRa_SatusLED::Status::OK);
     
     while (true) {
         const auto API_EnvelopeReceived{ tryReceive_API_Envelope() };
@@ -47,7 +51,7 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
     if (!setConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(setConfigurationStatus.error()->what()) };
         if (!errorSent) {
-            // TODO: UnableToSetConfiguration
+            putIntoMalfunctionMode(setConfigurationStatus.error()->what(), EasyLoRa_SatusLED::Status::SetConfigurationError);
         }
         return;
     }
@@ -58,7 +62,7 @@ void EasyLoRa_Firmware::applyConfigurationMessage() {
     }
 
     serialToLoRa_m.setBaudRate(toValueBaudRate(newConfiguration.uartBaudRate));
-    // TODO: Reenviar el mensaje de configuración al otro módulo
+    // TODO: Reenviar el mensaje de configuración al otro módulo y esperar ACK?
 }
 
 void EasyLoRa_Firmware::sendConfigurationToAPI() {
@@ -66,7 +70,7 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
     if (!getConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(getConfigurationStatus.error()->what()) };
         if (!errorSent) {
-            // TODO: CantSendConfiguration
+            putIntoMalfunctionMode(getConfigurationStatus.error()->what(), EasyLoRa_SatusLED::Status::GetConfigurationError);
         }
         return;
     }
@@ -76,7 +80,7 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
     if (!serializeConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(serializeConfigurationStatus.error().what()) };
         if (!errorSent) {
-            // TODO: CantSerializeConfiguration
+            putIntoMalfunctionMode(serializeConfigurationStatus.error().what(), EasyLoRa_SatusLED::Status::SerializeError);
         }
         return;
     }
@@ -95,7 +99,6 @@ void EasyLoRa_Firmware::sendReceivedDataToAPI() {
     sendToAPI(received_LoRa_SerializedData_m);
 }
 
-// TODO: Tal vez asegurar que esté en modo transparente?
 void EasyLoRa_Firmware::sendReceivedDataToLoRa() {
     configurator_m.setMode(E22_400T37S_Configurator::Modes::Transparent);
 
@@ -103,7 +106,7 @@ void EasyLoRa_Firmware::sendReceivedDataToLoRa() {
     if (!sendStatus) {
         const auto errorSent{ responseSender_m.sendError(sendStatus.error().what()) };
         if (!errorSent) {
-            // TODO: CantSendLoRaMessage
+            putIntoMalfunctionMode(sendStatus.error().what(), EasyLoRa_SatusLED::Status::SendLoRaError);
         }
         return;
     }
@@ -116,7 +119,7 @@ void EasyLoRa_Firmware::syncBaudRateWithModule() {
     if (!getConfigurationStatus) {
         const auto errorSent{ responseSender_m.sendError(getConfigurationStatus.error()->what()) };
         if (!errorSent) {
-            // TODO: CantGetConfiguration
+            putIntoMalfunctionMode(getConfigurationStatus.error()->what(), EasyLoRa_SatusLED::Status::InitializationError);
         }
         return;
     }
@@ -170,8 +173,7 @@ void EasyLoRa_Firmware::manageAPIEnvelope() {
         break;
 
     default:
-        // TODO: No tiene sentido recibir un ACK o un error, simplemente se ignora o tal vez parpadear un led de error
-        Serial.println("Uknow package");
+        putIntoMalfunctionMode("Inconsistent envelope", EasyLoRa_SatusLED::Status::InconsistentEnvelopeError);
         break;
     }
 }
@@ -187,7 +189,7 @@ void EasyLoRa_Firmware::manageLoRaEnvelope() {
         break;
 
     case Envelope_requestConfiguration_tag:
-        // Solicitan información, mandar en modo dataToSend
+        // Solicitar configuración, mandar en modo dataToSend
         break;
     
     default:
@@ -218,5 +220,18 @@ bool EasyLoRa_Firmware::tryReceiveEnvelopeFromSerial(SerialParser &serial, Envel
 
     receivedEnvelope = decodeStatus.value();
     receivedCrudeData = envelopeStatus.value();
+
     return true;
+}
+
+// Error irrecuperable, para debug
+void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, EasyLoRa_SatusLED::Status status) {
+    statusLED_m.setStatus(status);
+    Serial.begin();
+    while (true) {
+        Serial.print("El modulo no funciona correctamente, por favor reiniciar. Error: ");
+        Serial.println(errorMessage.data());
+        
+        delay(1000);
+    }
 }

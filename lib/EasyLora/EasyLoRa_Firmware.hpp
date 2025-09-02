@@ -12,10 +12,11 @@
 #include "E22_400T37S_Configurator.hpp"
 #include "MessageEncoder.hpp"
 #include "ResponseSender.hpp"
+#include "EasyLoRa_StatusLED.hpp"
 
 /*
-    TODO: Solucionar los siguientes problemas
-    - Quitar todos los Serial.println(), son solo para debug temprano
+    TODO:
+    - Ahora los errores son irrecuperables, esto piensa cambiarse
 */
 
 /// @brief Firmware del dispositivo EasyLoRa
@@ -54,6 +55,10 @@ private:
 
     uint16_t timeoutInMs_m{ 1000 };
 
+    DigitalInput auxPin_m;
+
+    EasyLoRa_SatusLED statusLED_m{ PIN_NEOPIXEL };
+
     [[nodiscard]]
     bool tryReceive_API_Envelope();
 
@@ -75,6 +80,8 @@ private:
 
     [[nodiscard]]
     static bool tryReceiveEnvelopeFromSerial(SerialParser& serial, Envelope& receivedEnvelope, std::vector<uint8_t>& receivedCrudeData);
+
+    void putIntoMalfunctionMode(std::string_view errorMessage, EasyLoRa_SatusLED::Status error);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER

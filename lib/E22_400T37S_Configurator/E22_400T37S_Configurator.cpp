@@ -20,8 +20,6 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
         return;
     }
 
-    waitForAuxRaising();
-
     switch (modeToSet) {
     case Modes::Transparent:
         setTransparentMode();
@@ -39,8 +37,6 @@ void E22_400T37S_Configurator::setMode(Modes modeToSet) {
         setSleepMode();
         break;
     }
-
-    waitForAuxRaising();
 
     delay(Mode_Switching_Delay_In_Ms);
 
@@ -155,12 +151,6 @@ void E22_400T37S_Configurator::setConfigurationMode() {
 void E22_400T37S_Configurator::setSleepMode() {
     m0_pin_m.write(true);
     m1_pin_m.write(true);
-}
-
-void E22_400T37S_Configurator::waitForAuxRaising() {
-    while(!auxPin_m.read()) {
-        delay(Watchdog_Delay_Ms); // watchdog
-    }
 }
 
 void E22_400T37S_Configurator::setComponentsFromREG0(ModuleConfiguration &configuration, uint8_t REG0) {

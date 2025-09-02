@@ -14,6 +14,7 @@
 #include <sstream>
 #include <bitset>
 
+/// @brief Clase encargada del manejo de la configuración y los pines del módulo LoRa
 class E22_400T37S_Configurator {
 public:
 
@@ -56,8 +57,7 @@ public:
 
     /// @brief Cambia al modo deseado
     /// @param modeToSet El modo a cambiar
-    /// @note La función espera a que aux esté HIGH, cambia el modo, espera de nuevo a aux y espera otros 40ms. La documentación dice que son 2ms, pero
-    /// en diversas pruebas 40ms parece ser más seguro
+    /// @note La función cambia el modo y espera 40ms. La documentación dice que son 2ms, pero en diversas pruebas 40ms parece ser más seguro
     void setMode(Modes modeToSet);
 
     /// @brief Establece la configuración enviada
@@ -88,7 +88,8 @@ private:
 
     static constexpr std::array Read_All_Configurations_Command{ Write_Read_Response_Prefix, Register_Start_Address, Registers_Length };
  
-    static constexpr uint16_t Mode_Switching_Delay_In_Ms{ 40 };
+    static constexpr uint8_t Mode_Switching_Delay_In_Ms{ 100 };
+
     static constexpr uint16_t Baud_Rate_For_Configuration{ 9600 };
     static constexpr uint8_t Expected_Read_Configuration_Response_Size{ 10 };
     
@@ -121,8 +122,6 @@ private:
     static constexpr uint8_t WOR_Enabled_Shift{ 3 };
     static constexpr uint8_t WOR_Cycle_Mask{ 0b111 };
 
-    static constexpr uint8_t Watchdog_Delay_Ms{ 1 };
-
     SerialParser serialToLoRa_m;
     DigitalOutput m0_pin_m;
     DigitalOutput m1_pin_m;
@@ -136,8 +135,6 @@ private:
     void setWORMode();
     void setConfigurationMode();
     void setSleepMode();
-
-    void waitForAuxRaising();
 
     static void setComponentsFromREG0(ModuleConfiguration& configuration, uint8_t REG0);
     static void setComponentsFromREG1(ModuleConfiguration& configuration, uint8_t REG1);
