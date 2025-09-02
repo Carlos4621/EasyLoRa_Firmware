@@ -3,48 +3,63 @@
 #include "SerialParser.hpp"
 #include "E22_400T37S_Configurator.hpp"
 #include <span>
+#include <Adafruit_NeoPixel.h>
 
-E22_400T37S_Configurator test{ Serial1, D0, D1, D2 };
+EasyLoRa_Firmware firmware{ Serial, Serial1, D3, D4, D2 };
 SerialParser par{ Serial1, 9600 };
+
+Adafruit_NeoPixel pixels(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
+
+[[noreturn]]
+void sendAlive() {
+	while (true) {
+		const auto status{ par.writeString("Hola") };
+
+		if (!status) {
+			while (true) {
+				Serial.println(status.error().what());
+				delay(1000);
+			}
+		}
+
+		delay(1000);
+	}
+}
+
+[[noreturn]]
+void getAlive() {
+	while (true) {
+		const auto status{ par.readMessage() };
+
+		if (!status) {
+			while (true) {
+				Serial.println(status.error().what());
+				delay(1000);
+			}
+		}
+
+		for (const char& i : status.value()) {
+			Serial.print(i);
+		}
+
+		Serial.println();
+
+		delay(1000);
+	}
+}
 
 void setup() {
 	Serial.begin();
-
-	pinMode(D0, OUTPUT);
-	pinMode(D1, OUTPUT);
-
-	digitalWrite(D0, LOW);
-	digitalWrite(D1, HIGH);
-
+	
 	par.begin();
-
-	delay(15000);
-
-	Serial.println("setup");
 }
 
 void loop() {
-
-	const auto status{ par.writeCrudeMessage({0xC1, 0x05, 0x01}) };
-	if (!status) {
-		Serial.println(status.error().what());
-		while(true) delay(100);
-	}
 	
-	const auto response{ par.readMessage(2) };
-	if (!response) {
-		Serial.println(response.error().what());
-		while(true) delay(100);
-	}
-	
-	for (const auto& i : response.value()) {
-		Serial.print(i, HEX);
-		Serial.print(" ");
-	}
+	firmware.begin(); firmware.start();
 
-	Serial.println();
+	//sendAlive();
 
-	Serial.println("Final");
-
-	while(true) delay(1000);
+	//getAlive();
 }
+
