@@ -62,4 +62,25 @@ public:
     }
 };
 
+class MessageSizeMissmatch : public std::exception {
+public:
+
+    MessageSizeMissmatch(size_t sizeExpected, size_t sizeReceived, bool onRead) 
+    : errorMessage_m{
+        std::string{"Tamaño del mensaje incorrecto. Esperado: "} + 
+        std::to_string(sizeExpected) + 
+        (onRead ? " Recibido: " : " Escrito: ") + 
+        std::to_string(sizeReceived)
+    } {}
+
+    [[nodiscard]]
+    const char* what() const noexcept override {
+        return errorMessage_m.c_str();
+    }
+
+private:
+
+    std::string errorMessage_m;
+};
+
 #endif // !EASY_LORA_EXCEPTIONS_HEADER

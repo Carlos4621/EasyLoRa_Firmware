@@ -66,7 +66,7 @@ tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::se
     const auto status{ serialToLoRa_m.writeCrudeMessage(std::vector<uint8_t>(messageToSend.cbegin(), messageToSend.cend())) };
     if (!status) {
         restorePreviousValues();
-        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(status.error()));
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(status.error()));
     }
 
     const auto response{ serialToLoRa_m.readMessage(Prefix_Length) };
@@ -74,7 +74,7 @@ tl::expected<void, std::shared_ptr<std::exception>> E22_400T37S_Configurator::se
     restorePreviousValues();
 
     if (!response) {
-        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(response.error()));
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(response.error()));
     }
 
     if (!isValidWriteResponse(std::vector<uint8_t>(messageToSend.cbegin(), messageToSend.cend()), response.value())) {
@@ -95,7 +95,7 @@ tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_C
 
     if (!status) {
         restorePreviousValues();
-        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(status.error()));
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(status.error()));
     }
 
     const auto message{ serialToLoRa_m.readMessage(Prefix_Length) };
@@ -103,7 +103,7 @@ tl::expected<ModuleConfiguration, std::shared_ptr<std::exception>> E22_400T37S_C
     restorePreviousValues();
 
     if (!message) {
-        return tl::make_unexpected(std::make_shared<SerialParser::MessageSizeMissmatch>(message.error()));
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(message.error()));
     }
 
     const auto& response{ message.value() };

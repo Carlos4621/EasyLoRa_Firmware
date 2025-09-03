@@ -7,12 +7,11 @@
 #include <stdexcept>
 #include "tl/expected.hpp"
 #include <memory>
+#include "EasyLoRa_Exceptions.hpp"
 
 /// @brief Clase encargada del formateo de mensajes enviados y recibidos desde un puerto USB
 class SerialParser {
 public:
-
-    class MessageSizeMissmatch;
 
     /// @brief Constructor base
     /// @param serialUSB Puerto en donde se enviarán y recibirán paquetes donde el primer byte el tamaño del mensaje. Opcionalmente se puede incluir un prefix
@@ -78,27 +77,6 @@ private:
     
     [[nodiscard]]
     tl::expected<void, MessageSizeMissmatch> tryWriteBytes(const std::vector<uint8_t>& buffer);
-};
-
-class SerialParser::MessageSizeMissmatch : public std::exception {
-public:
-
-    MessageSizeMissmatch(size_t sizeExpected, size_t sizeReceived, bool onRead) 
-    : errorMessage_m{
-        std::string{"Tamaño del mensaje incorrecto. Esperado: "} + 
-        std::to_string(sizeExpected) + 
-        (onRead ? " Recibido: " : " Escrito: ") + 
-        std::to_string(sizeReceived)
-    } {}
-
-    [[nodiscard]]
-    const char* what() const noexcept override {
-        return errorMessage_m.c_str();
-    }
-
-private:
-
-    std::string errorMessage_m;
 };
 
 #endif // !SERIAL_PARSER_HEADER
