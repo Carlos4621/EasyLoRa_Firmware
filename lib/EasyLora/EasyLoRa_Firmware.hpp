@@ -82,6 +82,8 @@ private:
     static bool tryReceiveEnvelopeFromSerial(SerialParser& serial, Envelope& receivedEnvelope, std::vector<uint8_t>& receivedCrudeData);
 
     void putIntoMalfunctionMode(std::string_view errorMessage, EasyLoRa_SatusLED::Status error);
+
+    void trySendErrorToAPI(std::string_view errorMessage, EasyLoRa_SatusLED::Status errorStatus);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER
