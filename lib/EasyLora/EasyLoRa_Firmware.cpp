@@ -187,7 +187,6 @@ bool EasyLoRa_Firmware::tryReceiveEnvelopeFromSerial(SerialParser &serial, Envel
     auto envelopeStatus{ serial.readMessage() };
 
     if (!envelopeStatus) {
-        // TODO: No se ha podido leer un mensaje, Error de conexión a la API o al módulo
         return false;
     }
 

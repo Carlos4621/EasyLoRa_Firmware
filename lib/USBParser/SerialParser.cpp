@@ -1,17 +1,17 @@
 #include "SerialParser.hpp"
 
 SerialParser::SerialParser(arduino::HardwareSerial& serialUSB, uint32_t baudRate)
-    : USBSerial_m{ serialUSB }
+    : serial_m{ serialUSB }
     , baudRate_m{ baudRate } {
 }
 
 void SerialParser::begin() {
-    USBSerial_m.begin(baudRate_m);
+    serial_m.begin(baudRate_m);
 }
 
 void SerialParser::setBaudRate(uint32_t baudRate) {
     baudRate_m = baudRate;
-    USBSerial_m.begin(baudRate_m);
+    serial_m.begin(baudRate_m);
 }
 
 uint32_t SerialParser::getBaudRate() const {
@@ -69,7 +69,7 @@ tl::expected<void, MessageSizeMissmatch> SerialParser::writeCrudeMessage(const s
 }
 
 tl::expected<bool, MessageSizeMissmatch> SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes, bool emptyReadIsValid) {
-    const auto bytesRead{ USBSerial_m.readBytes(&*buffer, expectedBytes) };
+    const auto bytesRead{ serial_m.readBytes(&*buffer, expectedBytes) };
 
     if (emptyReadIsValid && bytesRead == 0) {
         return false;
@@ -83,7 +83,7 @@ tl::expected<bool, MessageSizeMissmatch> SerialParser::tryReadBytes(std::vector<
 }
 
 tl::expected<void, MessageSizeMissmatch> SerialParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {
-    const auto bytesWritten{ USBSerial_m.write(buffer.data(), buffer.size()) };
+    const auto bytesWritten{ serial_m.write(buffer.data(), buffer.size()) };
 
     if (bytesWritten != buffer.size()) {
         return tl::make_unexpected(MessageSizeMissmatch{buffer.size(), bytesWritten, false});

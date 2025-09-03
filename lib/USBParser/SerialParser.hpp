@@ -14,9 +14,9 @@ class SerialParser {
 public:
 
     /// @brief Constructor base
-    /// @param serialUSB Puerto en donde se enviarán y recibirán paquetes donde el primer byte el tamaño del mensaje. Opcionalmente se puede incluir un prefix
-    /// @param baudRate Velocidad de baudios para la comunicación USB, por defecto 115200
-    explicit SerialParser(arduino::HardwareSerial& serialUSB, uint32_t baudRate = 115200);
+    /// @param serial Puerto en donde se enviarán y recibirán paquetes donde el primer byte el tamaño del mensaje. Opcionalmente se puede incluir un prefix
+    /// @param baudRate Velocidad de baudios para la comunicación serial, por defecto 115200
+    explicit SerialParser(arduino::HardwareSerial& serial, uint32_t baudRate = 9600);
 
     /// @brief Inicializa el dispositivo, debe ser llamado antes de cualquier otra función.
     void begin();
@@ -62,7 +62,7 @@ private:
 
     static constexpr uint8_t Message_Length_Byte_Size{ 1 };
 
-    arduino::HardwareSerial& USBSerial_m;
+    arduino::HardwareSerial& serial_m;
     uint32_t baudRate_m;
 
     /// @brief Intenta leer un mensaje del puerto serial
