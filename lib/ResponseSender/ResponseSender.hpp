@@ -17,15 +17,15 @@ public:
 
     /// @brief Envía un mensaje de éxito con datos binarios
     /// @param data Datos binarios a enviar
-    /// @return true si el envío fue exitoso, false en caso contrario
+    /// @return tl::expected con EncodificationError en caso de error de codificación, MessageSizeMissmatch en caso de no poder escribir el mensaje completo
     [[nodiscard]]
-    bool sendSuccess(const std::vector<uint8_t>& data);
+    tl::expected<void, std::shared_ptr<std::exception>> sendSuccess(const std::vector<uint8_t>& data);
 
     /// @brief Envía un mensaje de error
     /// @param errorMessage Mensaje de error a enviar
-    /// @return true si el envío fue exitoso, false en caso contrario
+    /// @return tl::expected con EncodificationError en caso de error de codificación, MessageSizeMissmatch en caso de no poder escribir el mensaje completo
     [[nodiscard]]
-    bool sendError(std::string_view errorMessage);
+    tl::expected<void, std::shared_ptr<std::exception>> sendError(std::string_view errorMessage);
 
 private:
     SerialParser& serialParser_m;
@@ -46,7 +46,7 @@ private:
     /// @param message Mensaje a enviar
     /// @return true si el envío fue exitoso, false en caso contrario
     [[nodiscard]]
-    bool encodeAndSend(const SuccessStatus& message);
+    tl::expected<void, std::shared_ptr<std::exception>> encodeAndSend(const SuccessStatus& message);
 };
 
 #endif // !RESPONSE_SENDER_HEADER

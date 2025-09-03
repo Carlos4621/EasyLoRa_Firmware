@@ -5,12 +5,12 @@ ResponseSender::ResponseSender(SerialParser& serialParser)
     : serialParser_m(serialParser) {
 }
 
-bool ResponseSender::sendSuccess(const std::vector<uint8_t>& data) {
+tl::expected<void, std::shared_ptr<std::exception>> ResponseSender::sendSuccess(const std::vector<uint8_t>& data) {
     const auto message{ createSuccessMessage(data) };
     return encodeAndSend(message);
 }
 
-bool ResponseSender::sendError(std::string_view errorMessage) {
+tl::expected<void, std::shared_ptr<std::exception>> ResponseSender::sendError(std::string_view errorMessage) {
     const auto message{ createErrorMessage(errorMessage) };
     return encodeAndSend(message);
 }
@@ -42,18 +42,17 @@ SuccessStatus ResponseSender::createErrorMessage(std::string_view errorMessage) 
     return toSend;
 }
 
-bool ResponseSender::encodeAndSend(const SuccessStatus& message) {
+tl::expected<void, std::shared_ptr<std::exception>> ResponseSender::encodeAndSend(const SuccessStatus& message) {
     const auto encodeStatus{ MessageEncoder<SuccessStatus>::encode(message) };
     if (!encodeStatus) {
         // TODO: Log del error de codificación - no podemos usar sendError aquí para evitar recursión
-        return false;
+        return tl::make_unexpected(std::make_shared<EncodificationError>(encodeStatus.error()));
     }
     
     const auto writeStatus{ serialParser_m.writeMessage(encodeStatus.value()) };
     if (!writeStatus) {
-        // TODO: Log del error de envío - no podemos usar sendError aquí para evitar recursión
-        return false;
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(writeStatus.error()));
     }
     
-    return true;
+    return {};
 }
