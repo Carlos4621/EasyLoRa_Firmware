@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <cstdio>
 
 class ResponseDontReceived : public std::exception {
 public:
@@ -18,8 +19,17 @@ public:
 class AbnormalResponse : public std::exception {
 public:
     explicit AbnormalResponse(const std::vector<uint8_t>& response)
-    : errorMessage_m{ std::string{ "Abnormal response: " } + std::string(response.cbegin(), response.cend()) }
-    {}
+    : errorMessage_m{ "Abnormal response: " }
+    {
+        for (size_t i = 0; i < response.size(); ++i) {
+            char hex[4];
+            snprintf(hex, sizeof(hex), "%02X", response[i]);
+            errorMessage_m += hex;
+            if (i < response.size() - 1) {
+                errorMessage_m += " ";
+            }
+        }
+    }
 
     [[nodiscard]]
     const char* what() const noexcept override {

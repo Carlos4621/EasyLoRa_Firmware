@@ -45,7 +45,6 @@ SuccessStatus ResponseSender::createErrorMessage(std::string_view errorMessage) 
 tl::expected<void, std::shared_ptr<std::exception>> ResponseSender::encodeAndSend(const SuccessStatus& message) {
     const auto encodeStatus{ MessageEncoder<SuccessStatus>::encode(message) };
     if (!encodeStatus) {
-        // TODO: Log del error de codificación - no podemos usar sendError aquí para evitar recursión
         return tl::make_unexpected(std::make_shared<EncodificationError>(encodeStatus.error()));
     }
     

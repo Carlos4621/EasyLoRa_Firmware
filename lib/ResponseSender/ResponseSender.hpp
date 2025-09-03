@@ -30,21 +30,12 @@ public:
 private:
     SerialParser& serialParser_m;
 
-    /// @brief Crea y configura un mensaje SuccessStatus para datos binarios
-    /// @param data Datos binarios a incluir
-    /// @return SuccessStatus configurado
     [[nodiscard]]
     SuccessStatus createSuccessMessage(const std::vector<uint8_t>& data);
 
-    /// @brief Crea y configura un mensaje SuccessStatus para errores
-    /// @param errorMessage Mensaje de error a incluir
-    /// @return SuccessStatus configurado
     [[nodiscard]]
     SuccessStatus createErrorMessage(std::string_view errorMessage);
 
-    /// @brief Codifica y envía un mensaje SuccessStatus
-    /// @param message Mensaje a enviar
-    /// @return true si el envío fue exitoso, false en caso contrario
     [[nodiscard]]
     tl::expected<void, std::shared_ptr<std::exception>> encodeAndSend(const SuccessStatus& message);
 };
