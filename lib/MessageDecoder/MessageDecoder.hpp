@@ -10,12 +10,12 @@
 #include <tl/expected.hpp>
 #include <memory>
 #include "MessageTraits.hpp"
+#include "EasyLoRa_Exceptions.hpp"
 
 /// @brief Decodificador genérico de mensajes Protocol Buffers
 template<typename MessageType>
 class MessageDecoder {
 public:
-    class DecodificationError;
 
     /// @brief Decodifica una serie de bytes en un mensaje del tipo especificado
     /// @param encodedData Data a decodificar
@@ -25,16 +25,7 @@ public:
 };
 
 template<typename MessageType>
-class MessageDecoder<MessageType>::DecodificationError : public std::exception {
-public:
-    [[nodiscard]]
-    const char* what() const noexcept override {
-        return "Unable to decode the data";
-    }
-};
-
-template<typename MessageType>
-tl::expected<MessageType, typename MessageDecoder<MessageType>::DecodificationError> 
+tl::expected<MessageType, DecodificationError> 
 MessageDecoder<MessageType>::decode(const std::vector<uint8_t>& encodedData) {
     MessageType decodedData{ MessageTraits<MessageType>::init_zero };
 

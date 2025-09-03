@@ -10,12 +10,12 @@
 #include <tl/expected.hpp>
 #include <memory>
 #include "MessageTraits.hpp"
+#include "EasyLoRa_Exceptions.hpp"
 
 /// @brief Codificador genérico de mensajes Protocol Buffers
 template<typename MessageType>
 class MessageEncoder {
 public:
-    class EncodificationError;
 
     /// @brief Codifica un mensaje del tipo especificado en una serie de bytes
     /// @param message Mensaje a codificar
@@ -25,16 +25,7 @@ public:
 };
 
 template<typename MessageType>
-class MessageEncoder<MessageType>::EncodificationError : public std::exception {
-public:
-    [[nodiscard]]
-    const char* what() const noexcept override {
-        return "Unable to encode the data";
-    }
-};
-
-template<typename MessageType>
-tl::expected<std::vector<uint8_t>, typename MessageEncoder<MessageType>::EncodificationError> 
+tl::expected<std::vector<uint8_t>, EncodificationError> 
 MessageEncoder<MessageType>::encode(const MessageType& message) {
 
     std::vector<uint8_t> encodedData(MessageTraits<MessageType>::max_size);

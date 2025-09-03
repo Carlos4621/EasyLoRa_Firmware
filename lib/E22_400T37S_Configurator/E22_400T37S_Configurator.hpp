@@ -13,14 +13,11 @@
 #include <memory>
 #include <sstream>
 #include <bitset>
+#include "EasyLoRa_Exceptions.hpp"
 
 /// @brief Clase encargada del manejo de la configuración y los pines del módulo LoRa
 class E22_400T37S_Configurator {
 public:
-
-    class ResponseDontReceived;
-    class AbnormalResponse;
-    class AbnormalRegister;
 
     enum class Modes : uint8_t { Transparent = 0, WOR, Configuration, Sleep };
 
@@ -191,46 +188,6 @@ private:
 
     [[nodiscard]]
     static bool isValidReadResponse(const std::vector<uint8_t>& responseReceived);
-};
-
-class E22_400T37S_Configurator::ResponseDontReceived : public std::exception {
-public:
-
-    [[nodiscard]]
-    const char* what() const noexcept override {
-        return "Response don't received";
-    }
-};
-
-class E22_400T37S_Configurator::AbnormalResponse : public std::exception {
-public:
-    explicit AbnormalResponse(const std::vector<uint8_t>& response)
-    : errorMessage_m{ std::string{ "Abnormal response: " } + std::string(response.cbegin(), response.cend()) }
-    {}
-
-    [[nodiscard]]
-    const char* what() const noexcept override {
-        return errorMessage_m.data();
-    }
-
-private:
-    std::string errorMessage_m;
-};
-
-class E22_400T37S_Configurator::AbnormalRegister : public std::exception {
-public:
-    AbnormalRegister(std::string_view registerName, uint8_t value) 
-    : errorMessage_m{ std::string("Abnormal register: ") + registerName.data() + " with value: " + std::to_string(value) }
-    {}
-
-    [[nodiscard]]
-    const char* what() const noexcept override {
-        return errorMessage_m.data();
-    }
-
-private:
-    std::string errorMessage_m;
-
 };
 
 /// @brief Método de conveniecia para obtener una string con formato que muestra las configuraciones enviadas
