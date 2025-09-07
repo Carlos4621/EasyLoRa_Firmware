@@ -11,6 +11,7 @@ void SerialParser::begin() {
 
 void SerialParser::setBaudRate(uint32_t baudRate) {
     baudRate_m = baudRate;
+
     serial_m.begin(baudRate_m);
 }
 

@@ -2,7 +2,7 @@
 
 EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial &serialUSB, arduino::HardwareSerial &serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin)
 :   serialToLoRa_m{ serialToLoRa },
-    configurator_m{ serialToLoRa, m0_Pin, m1_Pin, auxPin },
+    configurator_m{ serialToLoRa_m, m0_Pin, m1_Pin, auxPin },
     serialToAPI_m{ serialUSB },
     responseSender_m{ serialToAPI_m },
     auxPin_m{ auxPin }

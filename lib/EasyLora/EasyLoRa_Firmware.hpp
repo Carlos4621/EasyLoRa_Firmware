@@ -17,6 +17,9 @@
 /*
     TODO:
     - Ahora los errores son irrecuperables, esto piensa cambiarse
+
+    Soluciones posibles a bug en baudrate
+    - hacer begin solo después de intentar sincronizar el baudrate
 */
 
 /// @brief Firmware del dispositivo EasyLoRa

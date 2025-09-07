@@ -1,6 +1,6 @@
 #include "E22_400T37S_Configurator.hpp"
 
-E22_400T37S_Configurator::E22_400T37S_Configurator(arduino::HardwareSerial& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin)
+E22_400T37S_Configurator::E22_400T37S_Configurator(SerialParser& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin)
 : serialToLoRa_m{ serialToLoRa }
 , m0_pin_m{ m0_pin }
 , m1_pin_m{ m1_pin }

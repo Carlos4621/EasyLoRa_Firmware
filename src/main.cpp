@@ -8,9 +8,11 @@
 EasyLoRa_Firmware firmware{ Serial, Serial1, D3, D4, D2 };
 
 void setup() {
+	delay(200);
+	firmware.begin();
 }
 
 void loop() {
-	firmware.begin(); firmware.start();
+	firmware.start();
 }
 

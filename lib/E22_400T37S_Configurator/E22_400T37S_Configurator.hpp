@@ -47,7 +47,7 @@ public:
     /// @param m0_pin Pin a M0
     /// @param m1_pin Pin a M1
     /// @param auxPin Pin a aux
-    E22_400T37S_Configurator(arduino::HardwareSerial& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin);
+    E22_400T37S_Configurator(SerialParser& serialToLoRa, uint8_t m0_pin, uint8_t m1_pin, uint8_t auxPin);
 
     /// @brief Inicializa los pines necesarios y el puero serial, llamar antes de cualquier otra función
     void begin();
@@ -119,7 +119,7 @@ private:
     static constexpr uint8_t WOR_Enabled_Shift{ 3 };
     static constexpr uint8_t WOR_Cycle_Mask{ 0b111 };
 
-    SerialParser serialToLoRa_m;
+    SerialParser& serialToLoRa_m;
     DigitalOutput m0_pin_m;
     DigitalOutput m1_pin_m;
     DigitalInput auxPin_m;
