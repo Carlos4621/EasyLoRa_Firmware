@@ -9,35 +9,35 @@
 #include <memory>
 #include "EasyLoRa_Exceptions.hpp"
 
-/// @brief Clase encargada del formateo de mensajes enviados y recibidos desde un puerto USB
+/// @brief Clase encargada del formateo de mensajes enviados y recibidos desde un puerto serial
 class SerialParser {
 public:
 
     /// @brief Constructor base
     /// @param serial Puerto en donde se enviarán y recibirán paquetes donde el primer byte el tamaño del mensaje. Opcionalmente se puede incluir un prefix
     /// @param baudRate Velocidad de baudios para la comunicación serial, por defecto 115200
-    explicit SerialParser(arduino::HardwareSerial& serial, uint32_t baudRate = 9600);
+    explicit SerialParser(arduino::HardwareSerial& serial, uint32_t baudRate = 115200);
 
     /// @brief Inicializa el dispositivo, debe ser llamado antes de cualquier otra función.
     void begin();
 
-    /// @brief Cambia el baud rate de la comunicación USB.
-    /// @param baudRate Velocidad de baudios para la comunicación USB
+    /// @brief Cambia el baud rate de la comunicación serial
+    /// @param baudRate Velocidad de baudios para la comunicación serial
     void setBaudRate(uint32_t baudRate);
 
-    /// @brief Obtiene el baud rate
+    /// @brief Obtiene el baudrate
     /// @return El baudRate actual
     [[nodiscard]]
     uint32_t getBaudRate() const;
 
-    /// @brief Intenta leer un mensaje del puerto USB
+    /// @brief Intenta leer un mensaje del puerto serial
     /// @param prefixLength Longitud del prefix
     /// @return tl::expected con std::vector<uint8_t> que contiene el mensaje leído si se pudo leer uno,
     /// MessageSizeMissmatch si el byte de longitud del mensaje es incorrecto
     [[nodiscard]]
     tl::expected<std::vector<uint8_t>, MessageSizeMissmatch> readMessage(uint8_t prefixLength = 0);
 
-    /// @brief Escribe mensajes en el puerto SerialUSB.
+    /// @brief Escribe mensajes en el puerto serial
     /// @param message Mensaje a enviar, el primer byte (si es que no hay prefix) serán el tamaño del mensaje.
     /// @param prefix Prefix a mandar junto al mensaje
     /// @return tl::excepted con MessageSizeMissmatch si el byte de longitud del mensaje es incorrecto

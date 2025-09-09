@@ -11,8 +11,7 @@ void SerialParser::begin() {
 
 void SerialParser::setBaudRate(uint32_t baudRate) {
     baudRate_m = baudRate;
-
-    serial_m.begin(baudRate_m);
+    begin();
 }
 
 uint32_t SerialParser::getBaudRate() const {
@@ -22,21 +21,21 @@ uint32_t SerialParser::getBaudRate() const {
 tl::expected<std::vector<uint8_t>, MessageSizeMissmatch> SerialParser::readMessage(uint8_t prefixLength) {
     std::vector<uint8_t> buffer(prefixLength + Message_Length_Byte_Size);
     
-    auto result{ tryReadBytes(buffer.begin(), buffer.size(), true) };
-    if (!result) {
-        return tl::make_unexpected(result.error());
+    auto readStatus{ tryReadBytes(buffer.begin(), buffer.size(), true) };
+    if (!readStatus) {
+        return tl::make_unexpected(readStatus.error());
     }
 
-    if (!result.value()) {
+    if (!readStatus.value()) {
         return {};
     }
 
     const auto incomingMessageSize{ buffer[prefixLength] };
     buffer.resize(prefixLength + Message_Length_Byte_Size + incomingMessageSize);
     
-    result = tryReadBytes(buffer.begin() + prefixLength + Message_Length_Byte_Size, incomingMessageSize);
-    if (!result) {
-        return tl::make_unexpected(result.error());
+    readStatus = tryReadBytes(buffer.begin() + prefixLength + Message_Length_Byte_Size, incomingMessageSize);
+    if (!readStatus) {
+        return tl::make_unexpected(readStatus.error());
     }
 
     return buffer;
