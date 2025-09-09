@@ -19,6 +19,7 @@
 class E22_400T37S_Configurator {
 public:
 
+    /// @brief Modos de funcionamiento del módulo
     enum class Modes : uint8_t { Transparent = 0, WOR, Configuration, Sleep };
 
     /// @brief Valores dados por documentación del módulo
@@ -43,7 +44,7 @@ public:
     };
 
     /// @brief Constructor base
-    /// @param serialToLoRa Serial a el módulo LoRa
+    /// @param serialToLoRa Serial al módulo LoRa
     /// @param m0_pin Pin a M0
     /// @param m1_pin Pin a M1
     /// @param auxPin Pin a aux
@@ -54,7 +55,7 @@ public:
 
     /// @brief Cambia al modo deseado
     /// @param modeToSet El modo a cambiar
-    /// @note La función cambia el modo y espera 40ms. La documentación dice que son 2ms, pero en diversas pruebas 40ms parece ser más seguro
+    /// @note La función cambia el modo y espera 100ms. La documentación dice que son 2ms, pero en diversas pruebas 100ms parece ser más seguro
     void setMode(Modes modeToSet);
 
     /// @brief Establece la configuración enviada

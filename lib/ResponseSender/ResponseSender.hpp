@@ -11,7 +11,8 @@
 /// @brief Clase responsable del envío de respuestas de éxito y error por puerto serial
 class ResponseSender {
 public:
-    /// @brief Constructor
+
+    /// @brief Constructor base
     /// @param serialParser Referencia al parser serial para envío de mensajes
     explicit ResponseSender(SerialParser& serialParser);
 

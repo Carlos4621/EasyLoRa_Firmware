@@ -7,6 +7,7 @@
 class EasyLoRa_SatusLED {
 public:
 
+    /// @brief Status posibles del módulo
     enum class Status : uint8_t { 
         OK = 0,
         InitializationError,
@@ -19,14 +20,20 @@ public:
         SerializeError,
     };
 
+    /// @brief Constructor base
+    /// @param pin Pin del LED NeoPixel a usar
     explicit EasyLoRa_SatusLED(uint8_t pin);
 
     ~EasyLoRa_SatusLED();
 
+    /// @brief Inicializa el LED, usar antes de cualquier otro método
     void begin();
 
+    /// @brief Establece el color del status en el LED
+    /// @param status status a colocar
     void setStatus(Status status);
 
+    /// @brief Apaga el LED
     void shutdowmLED();
 
 private:

@@ -40,9 +40,7 @@ public:
     /// @brief Inicia el dispositivo
     [[noreturn]]
     void start();
-
-    void setTimeout(uint16_t timeoutInMs);
-
+    
 private:
 
     SerialParser serialToLoRa_m;
