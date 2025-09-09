@@ -190,32 +190,4 @@ private:
     static bool isValidReadResponse(const std::vector<uint8_t>& responseReceived);
 };
 
-/// @brief Método de conveniecia para obtener una string con formato que muestra las configuraciones enviadas
-/// @return std::string con las configuraciones
-/// @attention El uso de esta función aumenta DEMASIADO el peso del binario, usar con suma precaución
-[[nodiscard]]
-static std::string stringConfigurations(const ModuleConfiguration& configs) {
-    std::ostringstream output;
-
-    output <<
-    "High address: " << std::hex << configs.addressHighByte << '\n' <<
-    "Low address: " << configs.addressLowByte << '\n' <<
-    "NETID: " << std::dec << configs.NETID << '\n' <<
-    "UART bps: " << std::bitset<3>(configs.uartBaudRate) << '\n' <<
-    "Parity byte: " << std::bitset<2>(configs.serialPortParityByte) << '\n' <<
-    "Air rate: " << std::bitset<3>(configs.airDataRate) << '\n' <<
-    "Subpacket: " << std::bitset<2>(configs.subpacketLenght) << '\n' <<
-    "RSSI noise: " << configs.RSSIByte << '\n' <<
-    "Abnormal register: " << configs.enableAbnormalLog << '\n' <<
-    "Channel: " << std::hex << configs.Channel << '\n' <<
-    "Enable RSSI: " << configs.enableRSSI << '\n' <<
-    "Transmition method: " << configs.enableFixedTransmitionMode << '\n' <<
-    "Relay Mode: " << configs.enableRepeaterMode << '\n' <<
-    "LBT enabled: " << configs.enableLBT << '\n' <<
-    "WOR mode: " << configs.enableWORMode << '\n' <<
-    "WOR cycle: " << std::bitset<3>(configs.worCycle);
-
-    return output.str();
-};
-
 #endif // E22_400T37S_CONFIGURATOR_HEADER
