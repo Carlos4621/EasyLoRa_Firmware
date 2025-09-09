@@ -44,6 +44,14 @@ void EasyLoRa_SatusLED::setStatus(Status status) {
     case Status::SerializeError:
         led_m.setPixelColor(0, Serialize_Error_Color);
         break;
+
+    case Status::SendSuccessError:
+        led_m.setPixelColor(0, Send_Success_Error_Color);
+        break;
+
+    case Status::GetConfigurationError:
+        led_m.setPixelColor(0, Get_Configuration_Error_Color);
+        break;
     }
 
     led_m.show();
