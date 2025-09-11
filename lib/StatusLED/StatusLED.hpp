@@ -1,10 +1,10 @@
-#ifndef EASY_LORA_STATUS_LED_HEADER
-#define EASY_LORA_STATUS_LED_HEADER
+#ifndef STATUS_LED_HEADER
+#define STATUS_LED_HEADER
 
 #include  <Adafruit_NeoPixel.h>
 
 /// @brief Clase que permite mostrar el status del dispositivo EasyLoRa mediante colores
-class EasyLoRa_SatusLED {
+class StatusLED {
 public:
 
     /// @brief Status posibles del módulo
@@ -22,9 +22,9 @@ public:
 
     /// @brief Constructor base
     /// @param pin Pin del LED NeoPixel a usar
-    explicit EasyLoRa_SatusLED(uint8_t pin);
+    explicit StatusLED(uint8_t pin);
 
-    ~EasyLoRa_SatusLED();
+    ~StatusLED();
 
     /// @brief Inicializa el LED, usar antes de cualquier otro método
     void begin();
@@ -54,4 +54,4 @@ private:
     Adafruit_NeoPixel led_m;
 };
 
-#endif // !EASY_LORA_Status_LED_HEADER
+#endif // !Status_LED_HEADER

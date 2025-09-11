@@ -4,22 +4,22 @@
 // <>
 
 #include <Arduino.h>
-#include <SerialUSB.h>
 #include <vector>
 #include <pb_encode.h>
 #include "MessageDecoder.hpp"
 #include <array>
 #include "E22_400T37S_Configurator.hpp"
 #include "MessageEncoder.hpp"
-#include "ResponseSender.hpp"
-#include "EasyLoRa_StatusLED.hpp"
+#include "StatusLED.hpp"
+#include <optional>
+#include <string>
+#include "EnvelopeFactory.hpp"
 
 /*
     TODO:
     - Ahora los errores son irrecuperables, esto piensa cambiarse
 
-    Soluciones posibles a bug en baudrate
-    - hacer begin solo después de intentar sincronizar el baudrate
+    - Seguir con la optimización de métodos
 */
 
 /// @brief Firmware del dispositivo EasyLoRa
@@ -43,48 +43,38 @@ public:
     
 private:
 
+    struct EnvelopeBundle;
+
     SerialParser serialToLoRa_m;
     E22_400T37S_Configurator configurator_m;
     SerialParser serialToAPI_m;
-    ResponseSender responseSender_m;
-    
-    Envelope received_API_Envelope_m;
-    Envelope received_LoRa_Envelope_m;
-
-    std::vector<uint8_t> received_API_SerializedData_m;
-    std::vector<uint8_t> received_LoRa_SerializedData_m;
-
-    uint16_t timeoutInMs_m{ 1000 };
 
     DigitalInput auxPin_m;
 
-    EasyLoRa_SatusLED statusLED_m{ PIN_NEOPIXEL };
+    StatusLED statusLED_m{ PIN_NEOPIXEL };
 
-    [[nodiscard]]
-    bool tryReceive_API_Envelope();
+    ModuleConfiguration actualConfiguration_m = ModuleConfiguration_init_zero;
 
-    [[nodiscard]]
-    bool tryReceive_LoRa_Envelope();
+    void manageAPIEnvelope(const EnvelopeBundle& envelopeBundle);
+    void manageLoRaEnvelope(const EnvelopeBundle& envelopeBundle);
 
-    void applyConfigurationMessage();
+    void applyConfiguration(const ModuleConfiguration& configuration);
     void sendConfigurationToAPI();
-    void sendToAPI(const std::vector<uint8_t>& dataToSend);
-    void sendReceivedDataToAPI();
-    void sendReceivedDataToLoRa();
-    void syncBaudRateWithModule();
+    void sendToSerial(SerialParser& serial, const std::vector<uint8_t>& data, StatusLED::Status errorIfFails);
+
+    void syncModuleConfiguration();
 
     [[nodiscard]]
-    static uint32_t toValueBaudRate(UARTBaudRate enumedBaudRate);
+    std::optional<EnvelopeBundle> receiveEnvelopeFromSerial(SerialParser& serial);
 
-    void manageAPIEnvelope();
-    void manageLoRaEnvelope();
+    void putIntoMalfunctionMode(std::string_view errorMessage, StatusLED::Status error);
+
+    void trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus);
+
+    void sendACK(SerialParser& serial);
 
     [[nodiscard]]
-    static bool tryReceiveEnvelopeFromSerial(SerialParser& serial, Envelope& receivedEnvelope, std::vector<uint8_t>& receivedCrudeData);
-
-    void putIntoMalfunctionMode(std::string_view errorMessage, EasyLoRa_SatusLED::Status error);
-
-    void trySendErrorToAPI(std::string_view errorMessage, EasyLoRa_SatusLED::Status errorStatus);
+    static uint32_t toValueUARTBaudRate(UARTBaudRate enumedBaudRate);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER

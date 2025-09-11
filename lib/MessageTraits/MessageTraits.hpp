@@ -1,8 +1,7 @@
-#ifndef MESSAGE_TRAITS_HPP
-#define MESSAGE_TRAITS_HPP
+#ifndef MESSAGE_TRAITS_HEADER
+#define MESSAGE_TRAITS_HEADER
 
 #include "Envelope.pb.h"
-#include "SuccessStatus.pb.h"
 #include "ModuleConfiguration.pb.h"
 
 /// @brief Traits para tipos de mensajes Protocol Buffers
@@ -15,14 +14,6 @@ struct MessageTraits<Envelope> {
     static constexpr Envelope init_zero = Envelope_init_zero;
     static constexpr auto fields = Envelope_fields;
     static constexpr size_t max_size = Envelope_size;
-};
-
-/// @brief Especialización para SuccessStatus
-template<>
-struct MessageTraits<SuccessStatus> {
-    static constexpr SuccessStatus init_zero = SuccessStatus_init_zero;
-    static constexpr auto fields = SuccessStatus_fields;
-    static constexpr size_t max_size = SuccessStatus_size;
 };
 
 /// @brief Especialización para ModuleConfiguration

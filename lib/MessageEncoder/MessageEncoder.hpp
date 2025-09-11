@@ -1,16 +1,11 @@
-#ifndef MESSAGE_ENCODER_HPP
-#define MESSAGE_ENCODER_HPP
+#ifndef MESSAGE_ENCODER_HEADER
+#define MESSAGE_ENCODER_HEADER
 
 #include <pb_encode.h>
-#include <stdexcept>
-#include <Arduino.h>
-#include "Envelope.pb.h"
-#include "SuccessStatus.pb.h"
 #include <vector>
 #include <tl/expected.hpp>
-#include <memory>
-#include "MessageTraits.hpp"
 #include "EasyLoRa_Exceptions.hpp"
+#include "MessageTraits.hpp"
 
 /// @brief Codificador genérico de mensajes Protocol Buffers
 template<typename MessageType>
@@ -21,13 +16,11 @@ public:
     /// @param message Mensaje a codificar
     /// @return tl::expected con data codificada, EncodificationError en caso de error
     [[nodiscard]]
-    static tl::expected<std::vector<uint8_t>, EncodificationError> encode(const MessageType& message);
+    static tl::expected<std::vector<uint8_t>, std::shared_ptr<std::exception>> encode(const MessageType& message);
 };
 
 template<typename MessageType>
-tl::expected<std::vector<uint8_t>, EncodificationError> 
-MessageEncoder<MessageType>::encode(const MessageType& message) {
-
+tl::expected<std::vector<uint8_t>, std::shared_ptr<std::exception>> MessageEncoder<MessageType>::encode(const MessageType& message) {
     std::vector<uint8_t> encodedData(MessageTraits<MessageType>::max_size);
 
     pb_ostream_t encodeStream{ pb_ostream_from_buffer(encodedData.data(), encodedData.size()) };
@@ -35,7 +28,7 @@ MessageEncoder<MessageType>::encode(const MessageType& message) {
     const auto encodeStatus{ pb_encode(&encodeStream, MessageTraits<MessageType>::fields, &message) };
     
     if (!encodeStatus) {
-        return tl::make_unexpected(EncodificationError{});
+        return tl::make_unexpected(std::make_shared<EncodificationError>());
     }
 
     encodedData.resize(encodeStream.bytes_written);
@@ -43,4 +36,4 @@ MessageEncoder<MessageType>::encode(const MessageType& message) {
     return encodedData;
 }
 
-#endif // !MESSAGE_ENCODER_HPP
+#endif // !MESSAGE_ENCODER_HEADER

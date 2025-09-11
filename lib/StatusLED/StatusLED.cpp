@@ -1,21 +1,21 @@
-#include "EasyLoRa_StatusLED.hpp"
+#include "StatusLED.hpp"
 
-EasyLoRa_SatusLED::EasyLoRa_SatusLED(uint8_t pin)
+StatusLED::StatusLED(uint8_t pin)
 : led_m{ LED_Number, pin, LED_Type }
 {
 }
 
-EasyLoRa_SatusLED::~EasyLoRa_SatusLED() {
+StatusLED::~StatusLED() {
     shutdowmLED();
 }
 
-void EasyLoRa_SatusLED::begin() {
+void StatusLED::begin() {
     led_m.begin();
     led_m.setBrightness(Default_Brightness);
     shutdowmLED();
 }
 
-void EasyLoRa_SatusLED::setStatus(Status status) {
+void StatusLED::setStatus(Status status) {
     switch (status) {
     case Status::OK:
         led_m.setPixelColor(0, OK_Color);
@@ -57,7 +57,7 @@ void EasyLoRa_SatusLED::setStatus(Status status) {
     led_m.show();
 }
 
-void EasyLoRa_SatusLED::shutdowmLED() {
+void StatusLED::shutdowmLED() {
     led_m.clear();
     led_m.show();
 }

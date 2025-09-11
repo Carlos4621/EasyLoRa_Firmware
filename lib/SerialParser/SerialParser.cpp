@@ -18,7 +18,7 @@ uint32_t SerialParser::getBaudRate() const {
     return baudRate_m;
 }
 
-tl::expected<std::vector<uint8_t>, MessageSizeMissmatch> SerialParser::readMessage(uint8_t prefixLength) {
+tl::expected<std::vector<uint8_t>, std::shared_ptr<std::exception>> SerialParser::readMessage(uint8_t prefixLength) {
     std::vector<uint8_t> buffer(prefixLength + Message_Length_Byte_Size);
     
     auto readStatus{ tryReadBytes(buffer.begin(), buffer.size(), true) };
@@ -41,7 +41,7 @@ tl::expected<std::vector<uint8_t>, MessageSizeMissmatch> SerialParser::readMessa
     return buffer;
 }
 
-tl::expected<void, MessageSizeMissmatch> SerialParser::writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix) {
+tl::expected<void, std::shared_ptr<std::exception>> SerialParser::writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix) {
     if (message.empty()) {
         return {};
     }
@@ -60,15 +60,15 @@ tl::expected<void, MessageSizeMissmatch> SerialParser::writeMessage(const std::v
     return {};
 }
 
-tl::expected<void, MessageSizeMissmatch> SerialParser::writeString(std::string_view message, std::string_view prefix) {
+tl::expected<void, std::shared_ptr<std::exception>> SerialParser::writeString(std::string_view message, std::string_view prefix) {
     return writeMessage(std::vector<uint8_t>(message.cbegin(), message.cend()), std::vector<uint8_t>(prefix.cbegin(), prefix.cend()));
 }
 
-tl::expected<void, MessageSizeMissmatch> SerialParser::writeCrudeMessage(const std::vector<uint8_t> &message) {
+tl::expected<void, std::shared_ptr<std::exception>> SerialParser::writeCrudeMessage(const std::vector<uint8_t> &message) {
     return tryWriteBytes(message);
 }
 
-tl::expected<bool, MessageSizeMissmatch> SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes, bool emptyReadIsValid) {
+tl::expected<bool, std::shared_ptr<std::exception>> SerialParser::tryReadBytes(std::vector<uint8_t>::iterator buffer, size_t expectedBytes, bool emptyReadIsValid) {
     const auto bytesRead{ serial_m.readBytes(&*buffer, expectedBytes) };
 
     if (emptyReadIsValid && bytesRead == 0) {
@@ -76,17 +76,17 @@ tl::expected<bool, MessageSizeMissmatch> SerialParser::tryReadBytes(std::vector<
     }
     
     if (expectedBytes != bytesRead) {
-        return tl::make_unexpected(MessageSizeMissmatch{expectedBytes, bytesRead, true});
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(expectedBytes, bytesRead, true));
     }
 
     return true;
 }
 
-tl::expected<void, MessageSizeMissmatch> SerialParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {
+tl::expected<void, std::shared_ptr<std::exception>> SerialParser::tryWriteBytes(const std::vector<uint8_t> &buffer) {
     const auto bytesWritten{ serial_m.write(buffer.data(), buffer.size()) };
 
     if (bytesWritten != buffer.size()) {
-        return tl::make_unexpected(MessageSizeMissmatch{buffer.size(), bytesWritten, false});
+        return tl::make_unexpected(std::make_shared<MessageSizeMissmatch>(buffer.size(), bytesWritten, false));
     }
 
     return {};
