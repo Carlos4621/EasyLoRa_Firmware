@@ -42,7 +42,7 @@ tl::expected<std::vector<uint8_t>, std::shared_ptr<std::exception>> SerialParser
 }
 
 tl::expected<void, std::shared_ptr<std::exception>> SerialParser::writeMessage(const std::vector<uint8_t>& message, const std::vector<uint8_t>& prefix) {
-    if (message.empty()) {
+    if (message.empty() || !serial_m) {
         return {};
     }
 
@@ -90,4 +90,8 @@ tl::expected<void, std::shared_ptr<std::exception>> SerialParser::tryWriteBytes(
     }
 
     return {};
+}
+
+void SerialParser::flush() {
+    serial_m.flush();
 }

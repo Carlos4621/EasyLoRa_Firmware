@@ -95,6 +95,7 @@ void EasyLoRa_Firmware::applyConfiguration(const ModuleConfiguration& configurat
     actualConfiguration_m = configuration;
     serialToLoRa_m.setBaudRate(toValueUARTBaudRate(configuration.uartBaudRate));
     
+    sendACK(serialToAPI_m);
     // TODO: Reenviar el mensaje de configuración al otro módulo y esperar ACK?
 }
 
@@ -110,7 +111,7 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
 }
 
 void EasyLoRa_Firmware::sendToSerial(SerialParser &serial, const std::vector<uint8_t>& data, StatusLED::Status errorIfFails) {
-    const auto sendStatus = serial.writeMessage(data);
+    const auto sendStatus{ serial.writeMessage(data) };
     
     if (!sendStatus) {
         if (&serial == &serialToAPI_m) {

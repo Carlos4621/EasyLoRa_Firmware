@@ -63,6 +63,9 @@ public:
     [[nodiscard]]
     tl::expected<void, std::shared_ptr<std::exception>> writeCrudeMessage(const std::vector<uint8_t>& message);
 
+    /// @brief Espera a que los mensajes salientes sean totalmente enviados y limpia el buffer de entrada
+    void flush();
+
 private:
 
     static constexpr uint8_t Message_Length_Byte_Size{ 1 };

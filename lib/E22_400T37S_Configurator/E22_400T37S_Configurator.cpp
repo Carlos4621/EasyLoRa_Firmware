@@ -262,6 +262,8 @@ void E22_400T37S_Configurator::setupForConfiguration() {
 
     previousBaudRate_m = serialToLoRa_m.getBaudRate();
     serialToLoRa_m.setBaudRate(Baud_Rate_For_Configuration);
+
+    serialToLoRa_m.flush();
 }
 
 void E22_400T37S_Configurator::restorePreviousValues() {
