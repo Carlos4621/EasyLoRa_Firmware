@@ -66,9 +66,15 @@ public:
     /// @brief Espera a que los mensajes salientes sean totalmente enviados y limpia el buffer de entrada
     void flush();
 
+    void setTimeout(uint32_t timeout);
+
+    uint32_t getTimeout() const;
+
 private:
 
     static constexpr uint8_t Message_Length_Byte_Size{ 1 };
+
+    static constexpr uint8_t Default_TimeoutMs{ 50 };
 
     arduino::HardwareSerial& serial_m;
     uint32_t baudRate_m;

@@ -17,9 +17,12 @@
 
 /*
     TODO:
-    - Ahora los errores son irrecuperables, esto piensa cambiarse
+    - Ahora los errores son irrecuperables, esto piensa cambiarse   
+    
+    - Los errores relacionados con mensajes no bien estructurados o mal decodificados deben ser ignorados A MENOS que sean críticos como en los casos de
+        solicitar configuraciones o esperar ACK
 
-    - Seguir con la optimización de métodos
+    - Solucionar el error de problemas de decodificación al momento de enviar muchos paquetes
 */
 
 /// @brief Firmware del dispositivo EasyLoRa
@@ -65,13 +68,16 @@ private:
     void syncModuleConfiguration();
 
     [[nodiscard]]
-    std::optional<EnvelopeBundle> receiveEnvelopeFromSerial(SerialParser& serial);
+    std::optional<EnvelopeBundle> receiveEnvelopeFromSerial(SerialParser& serial, bool isStrangePackageValid = false);
 
+    [[noreturn]]
     void putIntoMalfunctionMode(std::string_view errorMessage, StatusLED::Status error);
 
     void trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus);
 
     void sendACK(SerialParser& serial);
+
+    void syncConfigurationWithReceiver(const std::vector<uint8_t>& data, uint32_t timeout);
 
     [[nodiscard]]
     static uint32_t toValueUARTBaudRate(UARTBaudRate enumedBaudRate);

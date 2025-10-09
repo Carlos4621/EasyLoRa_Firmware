@@ -7,6 +7,7 @@ SerialParser::SerialParser(arduino::HardwareSerial& serialUSB, uint32_t baudRate
 
 void SerialParser::begin() {
     serial_m.begin(baudRate_m);
+    serial_m.setTimeout(Default_TimeoutMs);
 }
 
 void SerialParser::setBaudRate(uint32_t baudRate) {
@@ -19,6 +20,10 @@ uint32_t SerialParser::getBaudRate() const {
 }
 
 tl::expected<std::vector<uint8_t>, std::shared_ptr<std::exception>> SerialParser::readMessage(uint8_t prefixLength) {
+    if(!serial_m) {
+        return {};
+    }
+
     std::vector<uint8_t> buffer(prefixLength + Message_Length_Byte_Size);
     
     auto readStatus{ tryReadBytes(buffer.begin(), buffer.size(), true) };
@@ -94,4 +99,12 @@ tl::expected<void, std::shared_ptr<std::exception>> SerialParser::tryWriteBytes(
 
 void SerialParser::flush() {
     serial_m.flush();
+}
+
+void SerialParser::setTimeout(uint32_t timeout) {
+    serial_m.setTimeout(timeout);
+}
+
+uint32_t SerialParser::getTimeout() const {
+    return serial_m.getTimeout();
 }

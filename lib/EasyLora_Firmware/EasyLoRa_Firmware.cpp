@@ -38,7 +38,7 @@ void EasyLoRa_Firmware::start() {
             manageAPIEnvelope(API_EnvelopeReceived.value());
         }
 
-        const auto LoRa_EnvelopeReceived{ receiveEnvelopeFromSerial(serialToLoRa_m) };
+        const auto LoRa_EnvelopeReceived{ receiveEnvelopeFromSerial(serialToLoRa_m, true) };
         if (LoRa_EnvelopeReceived) {
             manageLoRaEnvelope(LoRa_EnvelopeReceived.value());
         }
@@ -53,6 +53,11 @@ void EasyLoRa_Firmware::manageAPIEnvelope(const EnvelopeBundle& envelopeBundle) 
 
     case Envelope_configuration_tag:
         applyConfiguration(envelopeBundle.envelope.PosibleData.configuration);
+        sendACK(serialToAPI_m);
+
+        if (envelopeBundle.envelope.PosibleData.configuration.syncWithReceiver) {
+            syncConfigurationWithReceiver(envelopeBundle.encodedEnvelope, envelopeBundle.envelope.ACKRequirements.timeout);
+        }
         break;
 
     case Envelope_requestConfiguration_tag:
@@ -72,7 +77,8 @@ void EasyLoRa_Firmware::manageLoRaEnvelope(const EnvelopeBundle& envelopeBundle)
         break;
 
     case Envelope_configuration_tag:
-        // TODO: Aplicar y enviar ACK
+        applyConfiguration(envelopeBundle.envelope.PosibleData.configuration);
+        sendACK(serialToLoRa_m);
         break;
 
     case Envelope_requestConfiguration_tag:
@@ -85,7 +91,7 @@ void EasyLoRa_Firmware::manageLoRaEnvelope(const EnvelopeBundle& envelopeBundle)
 }
 
 void EasyLoRa_Firmware::applyConfiguration(const ModuleConfiguration& configuration) {
-    const auto setConfigurationStatus = configurator_m.setConfiguration(configuration);
+    const auto setConfigurationStatus{ configurator_m.setConfiguration(configuration) };
 
     if (!setConfigurationStatus) {
         trySendErrorToAPI(setConfigurationStatus.error()->what(), StatusLED::Status::SetConfigurationError);
@@ -94,13 +100,10 @@ void EasyLoRa_Firmware::applyConfiguration(const ModuleConfiguration& configurat
 
     actualConfiguration_m = configuration;
     serialToLoRa_m.setBaudRate(toValueUARTBaudRate(configuration.uartBaudRate));
-    
-    sendACK(serialToAPI_m);
-    // TODO: Reenviar el mensaje de configuración al otro módulo y esperar ACK?
 }
 
 void EasyLoRa_Firmware::sendConfigurationToAPI() {
-    const auto serializeConfigurationStatus = MessageEncoder<Envelope>::encode(EnvelopeFactory::withModuleConfiguration(actualConfiguration_m));
+    const auto serializeConfigurationStatus{ MessageEncoder<Envelope>::encode(EnvelopeFactory::withModuleConfiguration(actualConfiguration_m)) };
 
     if (!serializeConfigurationStatus) {
         trySendErrorToAPI(serializeConfigurationStatus.error()->what(), StatusLED::Status::SerializeError);
@@ -124,9 +127,9 @@ void EasyLoRa_Firmware::sendToSerial(SerialParser &serial, const std::vector<uin
 }
 
 void EasyLoRa_Firmware::syncModuleConfiguration() {
-    const auto getConfigurationStatus = configurator_m.getConfiguration();
+    const auto getConfigurationStatus{ configurator_m.getConfiguration() };
     if (!getConfigurationStatus) {
-        trySendErrorToAPI(getConfigurationStatus.error()->what(), StatusLED::Status::InitializationError);
+        putIntoMalfunctionMode(getConfigurationStatus.error()->what(), StatusLED::Status::InitializationError);
         return;
     }
 
@@ -134,12 +137,14 @@ void EasyLoRa_Firmware::syncModuleConfiguration() {
     serialToLoRa_m.setBaudRate(toValueUARTBaudRate(actualConfiguration_m.uartBaudRate));
 }
 
-std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvelopeFromSerial(SerialParser &serial) {
+std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvelopeFromSerial(SerialParser &serial, bool isStrangePackageValid) {
     auto envelopeStatus{ serial.readMessage() };
 
     if (!envelopeStatus) {
-        // TODO: Cambiar a error correcto
-        trySendErrorToAPI(envelopeStatus.error()->what(), StatusLED::Status::InconsistentEnvelopeError);
+        if (!isStrangePackageValid) {
+            trySendErrorToAPI(envelopeStatus.error()->what(), StatusLED::Status::InconsistentEnvelopeError);
+        }
+
         return std::nullopt;
     }
 
@@ -152,7 +157,10 @@ std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvel
     const auto decodeStatus{ MessageDecoder<Envelope>::decode(envelopeStatus.value()) };
 
     if (!decodeStatus) {
-        trySendErrorToAPI(decodeStatus.error()->what(), StatusLED::Status::SerializeError);
+        if (!isStrangePackageValid) {
+            trySendErrorToAPI(decodeStatus.error()->what(), StatusLED::Status::SerializeError);
+        }
+
         return std::nullopt;
     }
 
@@ -172,7 +180,7 @@ void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, St
 }
 
 void EasyLoRa_Firmware::trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus) {
-    const auto encodeStatus = MessageEncoder<Envelope>::encode(EnvelopeFactory::withError(errorMessage));
+    const auto encodeStatus{ MessageEncoder<Envelope>::encode(EnvelopeFactory::withError(errorMessage)) };
     if (!encodeStatus) {
         putIntoMalfunctionMode(encodeStatus.error()->what(), StatusLED::Status::SerializeError);
         return;
@@ -189,6 +197,24 @@ void EasyLoRa_Firmware::sendACK(SerialParser &serial) {
     }
     
     sendToSerial(serial, encodeStatus.value(), StatusLED::Status::SendSuccessError);
+}
+
+void EasyLoRa_Firmware::syncConfigurationWithReceiver(const std::vector<uint8_t>& data, uint32_t timeout) {
+    sendToSerial(serialToLoRa_m, data, StatusLED::Status::SendLoRaError);
+
+    const auto initialTime{ millis() };
+    uint32_t timeElapsed{ 0 };
+    while (timeElapsed < timeout) {
+        const auto expectedACK{ receiveEnvelopeFromSerial(serialToLoRa_m, true) };
+        if (expectedACK && (expectedACK.value().envelope.which_PosibleData == Envelope_ACK_tag) && (expectedACK.value().envelope.PosibleData.ACK)) {
+            sendACK(serialToAPI_m);
+            return;
+        }
+
+        timeElapsed = millis() - initialTime;
+    }
+
+    trySendErrorToAPI("ACK dont Received", StatusLED::Status::SyncConfigurationError);
 }
 
 uint32_t EasyLoRa_Firmware::toValueUARTBaudRate(UARTBaudRate enumedBaudRate) {
