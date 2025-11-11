@@ -171,12 +171,11 @@ std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvel
 void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, StatusLED::Status status) {
     statusLED_m.setStatus(status);
     Serial.begin();
-    while (true) {
-        Serial.print("El modulo no funciona correctamente, por favor reiniciar. Error: ");
-        Serial.println(errorMessage.data());
 
-        delay(1000);
-    }
+    Serial.print("El modulo no funciona correctamente. Error: ");
+    Serial.println(errorMessage.data());
+    Serial.print("Reiniciando en 1 segundo...");
+    watchdog_reboot(0, 0, Reboot_Time_In_Ms);
 }
 
 void EasyLoRa_Firmware::trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus) {

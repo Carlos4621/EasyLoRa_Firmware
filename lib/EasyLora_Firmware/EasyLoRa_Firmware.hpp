@@ -48,6 +48,8 @@ private:
 
     struct EnvelopeBundle;
 
+    static constexpr uint16_t Reboot_Time_In_Ms{ 1000 };
+
     SerialParser serialToLoRa_m;
     E22_400T37S_Configurator configurator_m;
     SerialParser serialToAPI_m;
