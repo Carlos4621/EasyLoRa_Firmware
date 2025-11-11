@@ -99,7 +99,7 @@ void EasyLoRa_Firmware::applyConfiguration(const ModuleConfiguration& configurat
     }
 
     actualConfiguration_m = configuration;
-    serialToLoRa_m.setBaudRate(toValueUARTBaudRate(configuration.uartBaudRate));
+    serialToLoRa_m.setBaudRate(toValueUARTBaudRate[configuration.uartBaudRate]);
 }
 
 void EasyLoRa_Firmware::sendConfigurationToAPI() {
@@ -134,7 +134,7 @@ void EasyLoRa_Firmware::syncModuleConfiguration() {
     }
 
     actualConfiguration_m = getConfigurationStatus.value();
-    serialToLoRa_m.setBaudRate(toValueUARTBaudRate(actualConfiguration_m.uartBaudRate));
+    serialToLoRa_m.setBaudRate(toValueUARTBaudRate[actualConfiguration_m.uartBaudRate]);
 }
 
 std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvelopeFromSerial(SerialParser &serial, bool isStrangePackageValid) {
@@ -167,7 +167,6 @@ std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvel
     return std::make_optional<EnvelopeBundle>(decodeStatus.value(), envelopeStatus.value());
 }
 
-// Error irrecuperable, para debug
 void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, StatusLED::Status status) {
     statusLED_m.setStatus(status);
     Serial.begin();
@@ -176,6 +175,7 @@ void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, St
     Serial.println(errorMessage.data());
     Serial.print("Reiniciando en 1 segundo...");
     watchdog_reboot(0, 0, Reboot_Time_In_Ms);
+    while(true) delay(Reboot_Time_In_Ms);
 }
 
 void EasyLoRa_Firmware::trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus) {
@@ -214,19 +214,4 @@ void EasyLoRa_Firmware::syncConfigurationWithReceiver(const std::vector<uint8_t>
     }
 
     trySendErrorToAPI("ACK dont Received", StatusLED::Status::SyncConfigurationError);
-}
-
-uint32_t EasyLoRa_Firmware::toValueUARTBaudRate(UARTBaudRate enumedBaudRate) {
-    switch (enumedBaudRate) {
-    case UARTBaudRate_UART_1200_BPS: return 1200;
-    case UARTBaudRate_UART_2400_BPS: return 2400;
-    case UARTBaudRate_UART_4800_BPS: return 4800;
-    case UARTBaudRate_UART_9600_BPS: return 9600;
-    case UARTBaudRate_UART_19200_BPS: return 19200;
-    case UARTBaudRate_UART_38400_BPS: return 38400;
-    case UARTBaudRate_UART_57600_BPS: return 57600;
-    case UARTBaudRate_UART_115200_BPS: return 115200;
-    }
-
-    __unreachable();
 }

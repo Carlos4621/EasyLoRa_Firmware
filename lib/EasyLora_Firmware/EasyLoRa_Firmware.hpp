@@ -50,6 +50,8 @@ private:
 
     static constexpr uint16_t Reboot_Time_In_Ms{ 1000 };
 
+    static constexpr std::array toValueUARTBaudRate{ 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 };
+
     SerialParser serialToLoRa_m;
     E22_400T37S_Configurator configurator_m;
     SerialParser serialToAPI_m;
@@ -80,9 +82,6 @@ private:
     void sendACK(SerialParser& serial);
 
     void syncConfigurationWithReceiver(const std::vector<uint8_t>& data, uint32_t timeout);
-
-    [[nodiscard]]
-    static uint32_t toValueUARTBaudRate(UARTBaudRate enumedBaudRate);
 };
 
 #endif // !EASY_LORA_FIRMWARE_HEADER
