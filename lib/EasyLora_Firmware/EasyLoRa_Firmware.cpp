@@ -11,11 +11,13 @@ struct EasyLoRa_Firmware::EnvelopeBundle {
     std::vector<uint8_t> encodedEnvelope;
 };
 
-EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial &serialUSB, arduino::HardwareSerial &serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin)
+EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial& serialUSB, arduino::HardwareSerial& serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, 
+        uint8_t auxPin, uint8_t heatSensorI2CAddress, uint8_t coolerPin, uint8_t coolerActivationTempC, uint8_t coolerDesactivationTempC)
 :   serialToLoRa_m{ serialToLoRa },
     configurator_m{ serialToLoRa_m, m0_Pin, m1_Pin, auxPin },
     serialToAPI_m{ serialUSB },
-    auxPin_m{ auxPin }
+    auxPin_m{ auxPin },
+    cooler_m{ heatSensorI2CAddress, coolerPin, coolerActivationTempC, coolerDesactivationTempC }
 {
 }
 
@@ -24,6 +26,7 @@ void EasyLoRa_Firmware::begin() {
     configurator_m.begin();
     serialToAPI_m.begin();
     statusLED_m.begin();
+    cooler_m.begin();
 }
 
 void EasyLoRa_Firmware::start() {
@@ -33,6 +36,8 @@ void EasyLoRa_Firmware::start() {
     statusLED_m.setStatus(StatusLED::Status::OK);
     
     while (true) {
+        cooler_m.handle();
+
         const auto API_EnvelopeReceived{ receiveEnvelopeFromSerial(serialToAPI_m) };
         if (API_EnvelopeReceived) {
             manageAPIEnvelope(API_EnvelopeReceived.value());

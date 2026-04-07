@@ -14,6 +14,7 @@
 #include <optional>
 #include <string>
 #include "EnvelopeFactory.hpp"
+#include "Cooler.hpp"
 
 /*
     TODO:
@@ -35,7 +36,12 @@ public:
     /// @param m0_Pin Pin a m0 del chip
     /// @param m1_Pin Pin a m1 del chip
     /// @param auxPin Pin a aux del chip
-    EasyLoRa_Firmware(arduino::HardwareSerial& serialUSB, arduino::HardwareSerial& serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, uint8_t auxPin);
+    /// @param heatSensorI2CAddress Dirección I2C al sensor de temperatura
+    /// @param coolerPin Pin para activar el disipador de calor
+    /// @param coolerActivationTempC Temperatura en Celsius para la activación de la disipación
+    /// @param coolerDesactivationTempC Temperatura en Celsius para la desactivación de la disipación
+    EasyLoRa_Firmware(arduino::HardwareSerial& serialUSB, arduino::HardwareSerial& serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, 
+        uint8_t auxPin, uint8_t heatSensorI2CAddress, uint8_t coolerPin, uint8_t coolerActivationTempC, uint8_t coolerDesactivationTempC);
 
     /// @brief Inicializa el dispositivo, debe ser llamado antes de cualquier otra función.
     void begin();
@@ -58,7 +64,9 @@ private:
 
     DigitalInput auxPin_m;
 
-    StatusLED statusLED_m{ PIN_NEOPIXEL };
+    // TODO: Modificar cuando se sepa el pin
+    StatusLED statusLED_m{ 1 };
+    Cooler cooler_m;
 
     ModuleConfiguration actualConfiguration_m = ModuleConfiguration_init_zero;
 
