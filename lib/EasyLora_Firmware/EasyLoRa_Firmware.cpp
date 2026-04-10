@@ -13,11 +13,11 @@ struct EasyLoRa_Firmware::EnvelopeBundle {
 
 EasyLoRa_Firmware::EasyLoRa_Firmware(arduino::HardwareSerial& serialUSB, arduino::HardwareSerial& serialToLoRa, uint8_t m0_Pin, uint8_t m1_Pin, 
         uint8_t auxPin, uint8_t heatSensorI2CAddress, uint8_t coolerPin, uint8_t coolerActivationTempC, uint8_t coolerDesactivationTempC)
-:   serialToLoRa_m{ serialToLoRa },
-    configurator_m{ serialToLoRa_m, m0_Pin, m1_Pin, auxPin },
-    serialToAPI_m{ serialUSB },
-    auxPin_m{ auxPin },
-    cooler_m{ heatSensorI2CAddress, coolerPin, coolerActivationTempC, coolerDesactivationTempC }
+: serialToLoRa_m{ serialToLoRa }
+, configurator_m{ serialToLoRa_m, m0_Pin, m1_Pin, auxPin }
+, serialToAPI_m{ serialUSB }
+, auxPin_m{ auxPin }
+, cooler_m{ heatSensorI2CAddress, coolerPin, coolerActivationTempC, coolerDesactivationTempC }
 {
 }
 
@@ -25,7 +25,6 @@ void EasyLoRa_Firmware::begin() {
     serialToLoRa_m.begin();
     configurator_m.begin();
     serialToAPI_m.begin();
-    statusLED_m.begin();
     cooler_m.begin();
 }
 
@@ -33,8 +32,6 @@ void EasyLoRa_Firmware::start() {
     configurator_m.setMode(E22_400T37S_Configurator::Modes::Transparent);
     syncModuleConfiguration();
 
-    statusLED_m.setStatus(StatusLED::Status::OK);
-    
     while (true) {
         cooler_m.handle();
 
@@ -53,7 +50,7 @@ void EasyLoRa_Firmware::start() {
 void EasyLoRa_Firmware::manageAPIEnvelope(const EnvelopeBundle& envelopeBundle) {
     switch (envelopeBundle.envelope.which_PosibleData) {
     case Envelope_data_tag:
-        sendToSerial(serialToLoRa_m, envelopeBundle.encodedEnvelope, StatusLED::Status::SendLoRaError);
+        sendToSerial(serialToLoRa_m, envelopeBundle.encodedEnvelope);
         break;
 
     case Envelope_configuration_tag:
@@ -70,7 +67,7 @@ void EasyLoRa_Firmware::manageAPIEnvelope(const EnvelopeBundle& envelopeBundle) 
         break;
 
     default:
-        putIntoMalfunctionMode("Inconsistent envelope", StatusLED::Status::InconsistentEnvelopeError);
+        putIntoMalfunctionMode("Inconsistent envelope");
         break;
     }
 }
@@ -78,7 +75,7 @@ void EasyLoRa_Firmware::manageAPIEnvelope(const EnvelopeBundle& envelopeBundle) 
 void EasyLoRa_Firmware::manageLoRaEnvelope(const EnvelopeBundle& envelopeBundle) {
     switch (envelopeBundle.envelope.which_PosibleData) {
     case Envelope_data_tag:
-        sendToSerial(serialToAPI_m, envelopeBundle.encodedEnvelope, StatusLED::Status::SendSuccessError);
+        sendToSerial(serialToAPI_m, envelopeBundle.encodedEnvelope);
         break;
 
     case Envelope_configuration_tag:
@@ -99,7 +96,7 @@ void EasyLoRa_Firmware::applyConfiguration(const ModuleConfiguration& configurat
     const auto setConfigurationStatus{ configurator_m.setConfiguration(configuration) };
 
     if (!setConfigurationStatus) {
-        trySendErrorToAPI(setConfigurationStatus.error()->what(), StatusLED::Status::SetConfigurationError);
+        trySendErrorToAPI(setConfigurationStatus.error()->what());
         return;
     }
 
@@ -111,22 +108,22 @@ void EasyLoRa_Firmware::sendConfigurationToAPI() {
     const auto serializeConfigurationStatus{ MessageEncoder<Envelope>::encode(EnvelopeFactory::withModuleConfiguration(actualConfiguration_m)) };
 
     if (!serializeConfigurationStatus) {
-        trySendErrorToAPI(serializeConfigurationStatus.error()->what(), StatusLED::Status::SerializeError);
+        trySendErrorToAPI(serializeConfigurationStatus.error()->what());
         return;
     }
     
-    sendToSerial(serialToAPI_m, serializeConfigurationStatus.value(), StatusLED::Status::SendSuccessError);
+    sendToSerial(serialToAPI_m, serializeConfigurationStatus.value());
 }
 
-void EasyLoRa_Firmware::sendToSerial(SerialParser &serial, const std::vector<uint8_t>& data, StatusLED::Status errorIfFails) {
+void EasyLoRa_Firmware::sendToSerial(SerialParser &serial, const std::vector<uint8_t>& data) {
     const auto sendStatus{ serial.writeMessage(data) };
     
     if (!sendStatus) {
         if (&serial == &serialToAPI_m) {
-            putIntoMalfunctionMode(sendStatus.error()->what(), errorIfFails);
+            putIntoMalfunctionMode(sendStatus.error()->what());
         }
         else {
-            trySendErrorToAPI(sendStatus.error()->what(), errorIfFails);
+            trySendErrorToAPI(sendStatus.error()->what());
         }
     }
 }
@@ -134,7 +131,7 @@ void EasyLoRa_Firmware::sendToSerial(SerialParser &serial, const std::vector<uin
 void EasyLoRa_Firmware::syncModuleConfiguration() {
     const auto getConfigurationStatus{ configurator_m.getConfiguration() };
     if (!getConfigurationStatus) {
-        putIntoMalfunctionMode(getConfigurationStatus.error()->what(), StatusLED::Status::InitializationError);
+        putIntoMalfunctionMode(getConfigurationStatus.error()->what());
         return;
     }
 
@@ -147,7 +144,7 @@ std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvel
 
     if (!envelopeStatus) {
         if (!isStrangePackageValid) {
-            trySendErrorToAPI(envelopeStatus.error()->what(), StatusLED::Status::InconsistentEnvelopeError);
+            trySendErrorToAPI(envelopeStatus.error()->what());
         }
 
         return std::nullopt;
@@ -163,7 +160,7 @@ std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvel
 
     if (!decodeStatus) {
         if (!isStrangePackageValid) {
-            trySendErrorToAPI(decodeStatus.error()->what(), StatusLED::Status::SerializeError);
+            trySendErrorToAPI(decodeStatus.error()->what());
         }
 
         return std::nullopt;
@@ -172,8 +169,7 @@ std::optional<EasyLoRa_Firmware::EnvelopeBundle> EasyLoRa_Firmware::receiveEnvel
     return std::make_optional<EnvelopeBundle>(decodeStatus.value(), envelopeStatus.value());
 }
 
-void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, StatusLED::Status status) {
-    statusLED_m.setStatus(status);
+void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage) {
     Serial.begin();
 
     Serial.print("El modulo no funciona correctamente. Error: ");
@@ -183,28 +179,28 @@ void EasyLoRa_Firmware::putIntoMalfunctionMode(std::string_view errorMessage, St
     while(true) delay(Reboot_Time_In_Ms);
 }
 
-void EasyLoRa_Firmware::trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus) {
+void EasyLoRa_Firmware::trySendErrorToAPI(std::string_view errorMessage) {
     const auto encodeStatus{ MessageEncoder<Envelope>::encode(EnvelopeFactory::withError(errorMessage)) };
     if (!encodeStatus) {
-        putIntoMalfunctionMode(encodeStatus.error()->what(), StatusLED::Status::SerializeError);
+        putIntoMalfunctionMode(encodeStatus.error()->what());
         return;
     }
     
-    sendToSerial(serialToAPI_m, encodeStatus.value(), errorStatus);
+    sendToSerial(serialToAPI_m, encodeStatus.value());
 }
 
 void EasyLoRa_Firmware::sendACK(SerialParser &serial) {
     const auto encodeStatus = MessageEncoder<Envelope>::encode(EnvelopeFactory::withACK());
     if (!encodeStatus) {
-        trySendErrorToAPI(encodeStatus.error()->what(), StatusLED::Status::SerializeError);
+        trySendErrorToAPI(encodeStatus.error()->what());
         return;
     }
     
-    sendToSerial(serial, encodeStatus.value(), StatusLED::Status::SendSuccessError);
+    sendToSerial(serial, encodeStatus.value());
 }
 
 void EasyLoRa_Firmware::syncConfigurationWithReceiver(const std::vector<uint8_t>& data, uint32_t timeout) {
-    sendToSerial(serialToLoRa_m, data, StatusLED::Status::SendLoRaError);
+    sendToSerial(serialToLoRa_m, data);
 
     const auto initialTime{ millis() };
     uint32_t timeElapsed{ 0 };
@@ -218,5 +214,5 @@ void EasyLoRa_Firmware::syncConfigurationWithReceiver(const std::vector<uint8_t>
         timeElapsed = millis() - initialTime;
     }
 
-    trySendErrorToAPI("ACK dont Received", StatusLED::Status::SyncConfigurationError);
+    trySendErrorToAPI("ACK dont Received");
 }

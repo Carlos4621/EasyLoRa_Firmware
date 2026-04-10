@@ -10,9 +10,9 @@
 #include <array>
 #include "E22_400T37S_Configurator.hpp"
 #include "MessageEncoder.hpp"
-#include "StatusLED.hpp"
 #include <optional>
 #include <string>
+#include <cstdint>
 #include "EnvelopeFactory.hpp"
 #include "Cooler.hpp"
 
@@ -64,8 +64,6 @@ private:
 
     DigitalInput auxPin_m;
 
-    // TODO: Modificar cuando se sepa el pin
-    StatusLED statusLED_m{ 1 };
     Cooler cooler_m;
 
     ModuleConfiguration actualConfiguration_m = ModuleConfiguration_init_zero;
@@ -75,7 +73,7 @@ private:
 
     void applyConfiguration(const ModuleConfiguration& configuration);
     void sendConfigurationToAPI();
-    void sendToSerial(SerialParser& serial, const std::vector<uint8_t>& data, StatusLED::Status errorIfFails);
+    void sendToSerial(SerialParser& serial, const std::vector<uint8_t>& data);
 
     void syncModuleConfiguration();
 
@@ -83,9 +81,9 @@ private:
     std::optional<EnvelopeBundle> receiveEnvelopeFromSerial(SerialParser& serial, bool isStrangePackageValid = false);
 
     [[noreturn]]
-    void putIntoMalfunctionMode(std::string_view errorMessage, StatusLED::Status error);
+    void putIntoMalfunctionMode(std::string_view errorMessage);
 
-    void trySendErrorToAPI(std::string_view errorMessage, StatusLED::Status errorStatus);
+    void trySendErrorToAPI(std::string_view errorMessage);
 
     void sendACK(SerialParser& serial);
 
